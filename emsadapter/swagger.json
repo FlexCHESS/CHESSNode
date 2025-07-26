@@ -1,0 +1,402 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "EMSAdapter",
+    "description" : "EMS Adapter API (ASP.NET Core 7.0)",
+    "termsOfService" : "https://preprod.umbrellaiot.com:9443/devportal",
+    "contact" : {
+      "name" : "Swagger Codegen Contributors",
+      "url" : "https://github.com/swagger-api/swagger-codegen"
+    },
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://preprodapim.umbrellaiot.com:9095/ems/1.0.0"
+  }, {
+    "url" : "http://chessapim.umbrellaiot.com/ems/1.0.0"
+  } ],
+  "security" : [ {
+    "default" : [ ]
+  } ],
+  "paths" : {
+    "/init" : {
+      "post" : {
+        "tags" : [ "DefaultApi" ],
+        "summary" : "The controller for handling the initialisation of CHESS adapter",
+        "parameters" : [ {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IO.Swagger.Controllers.DefaultApiControllerCHESS"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Success"
+          }
+        },
+        "security" : [ {
+          "default" : [ "CHESSNode" ]
+        } ],
+        "x-throttling-tier" : "Unlimited",
+        "x-auth-type" : "Application & Application User"
+      }
+    },
+    "/status/{id}" : {
+      "get" : {
+        "tags" : [ "DefaultApi" ],
+        "description" : "Returns the current status profiles for the specified CHESS id",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Success"
+          }
+        },
+        "security" : [ {
+          "default" : [ ]
+        } ],
+        "x-throttling-tier" : "Unlimited",
+        "x-auth-type" : "Application & Application User"
+      },
+      "post" : {
+        "tags" : [ "DefaultApi" ],
+        "summary" : "The controller for handling the status setting / retrieval from CHESS",
+        "description" : "The body CHESS status structures specify the required virtual battery flexibility capacity profile (charge / discharge),  which is mapped to the available capacity of the CHESS assets taking account of the prior commitments / status",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IO.Swagger.Controllers.DefaultApiControllerCHESS"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Success"
+          }
+        },
+        "security" : [ {
+          "default" : [ ]
+        } ],
+        "x-throttling-tier" : "Unlimited",
+        "x-auth-type" : "Application & Application User"
+      }
+    },
+    "/current" : {
+      "get" : {
+        "tags" : [ "DefaultApi" ],
+        "summary" : "Get the current flexibility provision for the specified target",
+        "description" : "The CHESS status response contains the current commitments for the requested CHESS ",
+        "parameters" : [ {
+          "name" : "location",
+          "in" : "query",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "recurrence",
+          "in" : "query",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "service",
+          "in" : "query",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully processed the updates",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/IO.Swagger.Controllers.DefaultApiControllerCHESS"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        },
+        "security" : [ {
+          "default" : [ ]
+        } ],
+        "x-throttling-tier" : "Unlimited",
+        "x-auth-type" : "Application & Application User"
+      },
+      "post" : {
+        "tags" : [ "DefaultApi" ],
+        "summary" : "Get the current flexibility provision for the specified target",
+        "description" : "The CHESS status response contains the current commitments for the requested CHESS based on the CHESS status profile provided in the body",
+        "parameters" : [ {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IO.Swagger.Controllers.DefaultApiControllerCHESS"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully processed the updates",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/IO.Swagger.Controllers.DefaultApiControllerCHESS"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        },
+        "security" : [ {
+          "default" : [ ]
+        } ],
+        "x-throttling-tier" : "Unlimited",
+        "x-auth-type" : "Application & Application User"
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Azure.DigitalTwins.Core.DigitalTwinMetadata" : {
+        "type" : "object",
+        "properties" : {
+          "$model" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "propertyMetadata" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/Azure.DigitalTwins.Core.DigitalTwinPropertyMetadata"
+            },
+            "nullable" : true
+          }
+        },
+        "additionalProperties" : false
+      },
+      "Azure.DigitalTwins.Core.DigitalTwinPropertyMetadata" : {
+        "type" : "object",
+        "properties" : {
+          "lastUpdateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sourceTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true
+          }
+        },
+        "additionalProperties" : false
+      },
+      "Azure.ETag" : {
+        "type" : "object",
+        "additionalProperties" : false
+      },
+      "IO.Swagger.Controllers.DefaultApiControllerCHESS" : {
+        "type" : "object",
+        "properties" : {
+          "identifier" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "location" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "id" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "currentStatus" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "status" : {
+            "type" : "array",
+            "nullable" : true,
+            "items" : {
+              "$ref" : "#/components/schemas/IoT.Services.ChessStatus"
+            }
+          },
+          "limits" : {
+            "type" : "array",
+            "nullable" : true,
+            "items" : {
+              "$ref" : "#/components/schemas/IoT.Services.ChessStatus"
+            }
+          }
+        },
+        "additionalProperties" : false
+      },
+      "IoT.Services.ChessStatus" : {
+        "type" : "object",
+        "properties" : {
+          "$dtId" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "$etag" : {
+            "$ref" : "#/components/schemas/Azure.ETag"
+          },
+          "$lastUpdateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "nullable" : true,
+            "readOnly" : true
+          },
+          "$metadata" : {
+            "$ref" : "#/components/schemas/Azure.DigitalTwins.Core.DigitalTwinMetadata"
+          },
+          "status" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "service" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "starttime" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "endtime" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "capacity" : {
+            "type" : "string",
+            "nullable" : true
+          },
+          "recurrence" : {
+            "type" : "string",
+            "nullable" : true
+          }
+        },
+        "additionalProperties" : { }
+      }
+    },
+    "securitySchemes" : {
+      "default" : {
+        "type" : "oauth2",
+        "flows" : {
+          "implicit" : {
+            "authorizationUrl" : "https://preprodapim.umbrellaiot.com:9095/authorize",
+            "scopes" : {
+              "CHESSNode" : "A CHESS Node is a virtual environment in which adapters execute"
+            },
+            "x-scopes-bindings" : {
+              "CHESSNode" : "admin,AssetOwner,FlexibilityUser"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chessmanagement
+  labels:
+    app: chessmanagement
+spec:
+  ports:
+  - port: 80
+    targetPort: <PORT>
+    name: http
+  selector:
+    app: chessmanagement
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chessmanagement
+  labels:
+    version: v1
+spec:
+  serviceName: chessclient
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chessmanagement
+  template:
+    metadata:
+      labels:
+        app: chessmanagement
+        version: v1
+    spec:
+      containers:
+      - name: chessmanagement
+        image: <CONTAINER>
+        env:
+        - name: CONF
+          value: "<ENVCONF>"
+        - name: AAS_URL
+          value: "http://aasserver/api/v3.0"
+        - name: "adtServiceUrl"
+          value: "https://DT-test-1.api.weu.digitaltwins.azure.net"
+        - name: "adtClientId"
+          value: "<adtClientId"
+        - name: "adtClientSecret"
+          value: "<adtClientSecret>"
+        - name: "adtTenantId"
+          value: "<adtTenantId>"
+        resources:
+          requests:
+            cpu: "1m"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: <PORT>
+        volumeMounts:
+        - mountPath: <MOUNTPATH>
+          name: <MOUNTNAME>
+      imagePullSecrets:
+        - name: <CREDENTIALS>
+      volumes:
+      - name: <MOUNTNAME>
+        hostPath:
+          path: <MOUNTHOSTPATH>
+      nodeSelector:
+         kubernetes.io/arch: amd64

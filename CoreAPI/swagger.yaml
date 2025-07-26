@@ -1,0 +1,338 @@
+openapi: 3.0.1
+info:
+  title: chess
+  version: "1.0"
+servers:
+ -
+  url: /
+security:
+ -
+  default: []
+paths:
+  /register:
+    post:
+      description: Add CHESS (adapter) to a CHESS node and update the digital twin
+      parameters:
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+  /capability:
+    get:
+      description: Retrieve the CHESS capabilities from digital twin
+      parameters:
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default: []
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+    post:
+      description: Update the CHESS capabilities in the digital twin
+      parameters:
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+  /capability/{id}:
+    get:
+      description: Retrieve the CHESS capabilities for a specific CHESS from digital twin
+      parameters:
+       -
+        name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: string
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default: []
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+    post:
+      description: Update the CHESS capabilities for a specific CHESS in the digital twin
+      parameters:
+       -
+        name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: string
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      requestBody:
+        description: ""
+        content:
+          application/jaon:
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+  /status:
+    get:
+      description: Retrieve the status of all the CHESS from the digital twin
+      parameters:
+       -
+        name: service
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+         - saFlexibilityUser
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+  /status/{id}:
+    get:
+      description: Retrieve the status of specific CHESS  given by its id from the digital twin
+      parameters:
+       -
+        name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: string
+       -
+        name: service
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+         - saFlexibilityUser
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+    post:
+      description: Update the status for a CHESS given by its id in the digital twin
+      parameters:
+       -
+        name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: string
+       -
+        name: chessnode
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: ok
+      security:
+       -
+        default:
+         - saFlexibilityProvider
+         - saFlexibilityUser
+      x-auth-type: Application & Application User
+      x-throttling-tier: Unlimited
+      x-wso2-application-security:
+        security-types:
+         - oauth2
+        optional: false
+components:
+  securitySchemes:
+    default:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://test.com
+          scopes:
+            saCHESSOwner: ""
+            saFlexibilityProviderOwner: ""
+            saFlexibilityProvider: A flexibility service provider using CHESS
+            saAssetOwner: ""
+            saFlexibilityUser: ""
+            saCHESSNode: A CHESS node which is either virtual or physical
+          x-scopes-bindings:
+            saCHESSNode: CHESSNode
+            saFlexibilityProvider: AssetOwner
+            saFlexibilityProviderOwner: ""
+            saCHESSOwner: admin
+            saAssetOwner: admin
+            saFlexibilityUser: FlexibilityUser
+x-wso2-auth-header: Authorization
+x-wso2-cors:
+  corsConfigurationEnabled: false
+  accessControlAllowOrigins:
+   - '*'
+  accessControlAllowCredentials: false
+  accessControlAllowHeaders:
+   - authorization
+   - Access-Control-Allow-Origin
+   - Content-Type
+   - SOAPAction
+   - apikey
+   - Internal-Key
+  accessControlAllowMethods:
+   - GET
+   - PUT
+   - POST
+   - DELETE
+   - PATCH
+   - OPTIONS
+x-wso2-production-endpoints:
+  urls:
+   - http://aasserver.default.svc
+  type: http
+x-wso2-sandbox-endpoints:
+  urls:
+   - http://aasserver.default.svc
+  type: http
+x-wso2-basePath: /chess/1.0
+x-wso2-transports:
+ - http
+ - https
+x-wso2-response-cache:
+  enabled: false
+  cacheTimeoutInSeconds: 300

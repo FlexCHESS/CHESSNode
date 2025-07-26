@@ -1,0 +1,548 @@
+{
+    "digitalTwinsFileInfo": {
+        "fileVersion": "1.0.0"
+    },
+    "digitalTwinsGraph": {
+        "digitalTwins": [
+            {
+                "$dtId": "it-iren-chess1-simpeakPower",
+                "$etag": "W/\"f39fb3d1-89b4-47d2-9eab-f959c01d4254\"",
+                "sourceOfDefinition": "com:solartech:mqtt",
+                "unit": "kW",
+                "unitIdValue": "",
+                "symbol": "kW",
+                "dataType": "REAL_MEASURE",
+                "valueFormat": "NR2S..3.3",
+                "preferredName": {
+                    "langString": {
+                        "en": "Peak Power"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7041934Z"
+                        }
+                    }
+                },
+                "shortName": {
+                    "langString": {
+                        "en": "Peak power"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7041934Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "en": "Peak Power in kW"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7041934Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-siminverterRating",
+                "$etag": "W/\"174f608b-7dc7-4a28-a907-8b79f55b4414\"",
+                "sourceOfDefinition": "com:solartech:mqtt",
+                "unit": "kW",
+                "unitIdValue": "",
+                "symbol": "kW",
+                "dataType": "REAL_MEASURE",
+                "valueFormat": "NR2S..3.3",
+                "preferredName": {
+                    "langString": {
+                        "en": "Inverter power rating"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8089019Z"
+                        }
+                    }
+                },
+                "shortName": {
+                    "langString": {
+                        "en": "Inverter rating"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8089019Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "en": "The inverter power rating in kW"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8089019Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            },
+            {
+                "$dtId": "saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa",
+                "$etag": "W/\"c2597776-2c01-41a9-9636-cd5c1ec7903a\"",
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubjectAttributes;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simdegradationRatio",
+                "$etag": "W/\"4b682db8-db38-48af-8cda-caeca08e86bc\"",
+                "sourceOfDefinition": "com:solartech:mqtt",
+                "unit": "percent per year",
+                "unitIdValue": "",
+                "symbol": "%/year",
+                "dataType": "INTEGER_MEASURE",
+                "valueFormat": "NR2..3.3",
+                "preferredName": {
+                    "langString": {
+                        "en": "Degradation"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7371801Z"
+                        }
+                    }
+                },
+                "shortName": {
+                    "langString": {
+                        "en": "Degradation"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7371801Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "en": "Degradation in percent per year"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7371801Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simorientation",
+                "$etag": "W/\"3a6f71e8-25ed-4572-81de-7ce71ad88797\"",
+                "sourceOfDefinition": "com.solartech.mqtt",
+                "unit": "degrees",
+                "symbol": "",
+                "valueFormat": "http:--www.w3.org-2001-XMLSchema#string",
+                "dataType": "STRING",
+                "preferredName": {
+                    "langString": {
+                        "en": "Orientation of PV"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7550505Z"
+                        }
+                    }
+                },
+                "shortName": {
+                    "langString": {
+                        "en": "Orientation"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7550505Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "en": "Orientation of PV in degrees"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.7550505Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            },
+            {
+                "$dtId": "saFlexibilityProviderXRltPb3KZbnmekTxpOPMBxRpivQa",
+                "$etag": "W/\"9f10a1fa-2166-4f4e-a095-99e51f57c0f1\"",
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubjectAttributes;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simAccessControlPermissions",
+                "$etag": "W/\"b6390038-38f4-4945-82dc-319ae3fff74a\"",
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:AccessPermissionRule;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simefficiency",
+                "$etag": "W/\"5b1fc1c6-2a5a-473b-80db-23a0c2edd4f8\"",
+                "sourceOfDefinition": "com:solartech:mqtt",
+                "unit": "percent",
+                "unitIdValue": "",
+                "symbol": "%",
+                "dataType": "REAL_MEASURE",
+                "valueFormat": "NR2S..3.3",
+                "preferredName": {
+                    "langString": {
+                        "en": "PV  efficiency"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8242344Z"
+                        }
+                    }
+                },
+                "shortName": {
+                    "langString": {
+                        "en": "efficiency"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8242344Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "en": "PV efficiency as percent ratio"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2024-12-22T09:24:03.8242344Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-sim",
+                "$etag": "W/\"b56bc0e0-1af2-4f9c-af8c-0add092ccda2\"",
+                "identifier": "simpvadapter",
+                "location": "CHESS node 2",
+                "standard": "solartech",
+                "version": "1.0",
+                "$metadata": {
+                    "$model": "dtmi:com:flexchess:chess;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simtelemetry",
+                "$etag": "W/\"e11ee393-9af8-4391-8b7c-e5cfa2cc398d\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "administration": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:Submodel;1"
+                }
+            },
+            {
+                "$dtId": "sme-it-iren-chess1-siminverterRating",
+                "$etag": "W/\"f95758e9-1566-4cec-962e-2d352309954a\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubmodelElement;1"
+                }
+            },
+            {
+                "$dtId": "sme-it-iren-chess1-simpeakPower",
+                "$etag": "W/\"632b6581-559c-4500-aa8f-39df2768d667\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubmodelElement;1"
+                }
+            },
+            {
+                "$dtId": "sme-it-iren-chess1-simdegradationRatio",
+                "$etag": "W/\"d5905618-c0d2-4de3-a236-d92ea73949aa\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubmodelElement;1"
+                }
+            },
+            {
+                "$dtId": "sme-it-iren-chess1-simorientation",
+                "$etag": "W/\"99aa13a1-c9ef-4955-b4c7-ae8416f4e402\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubmodelElement;1"
+                }
+            },
+            {
+                "$dtId": "sme-it-iren-chess1-simefficiency",
+                "$etag": "W/\"ce4e9c41-5c0f-4e1c-a3b0-1b7317f0711b\"",
+                "kind": {
+                    "$metadata": {}
+                },
+                "displayName": {
+                    "$metadata": {}
+                },
+                "description": {
+                    "$metadata": {}
+                },
+                "tags": {
+                    "$metadata": {}
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:SubmodelElement;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simtelemetryAccessControlPermissions",
+                "$etag": "W/\"0e9947a5-3792-4ab1-9f9f-908ade042bcd\"",
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:AccessPermissionRule;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-sim-status-1",
+                "$etag": "W/\"bba465ed-4227-4ac4-9766-5f113f02ea6b\"",
+                "capacity": "100",
+                "endtime": "23:00",
+                "recurrence": "daily",
+                "service": "all",
+                "starttime": "00:00",
+                "status": "available",
+                "$metadata": {
+                    "$model": "dtmi:com:flexchess:chessstatus;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-sim-status-2",
+                "$etag": "W/\"2e441006-656f-4608-ad7b-cb36c230c975\"",
+                "capacity": "0",
+                "endtime": "04:00",
+                "recurrence": "daily",
+                "service": "all",
+                "starttime": "16:00",
+                "status": "curtail",
+                "$metadata": {
+                    "$model": "dtmi:com:flexchess:chessstatus;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-sim-status-3",
+                "$etag": "W/\"a4410708-fefa-47bd-846c-b3cd45c5f535\"",
+                "capacity": "80",
+                "endtime": "16:00",
+                "recurrence": "daily",
+                "service": "all",
+                "starttime": "04:00",
+                "status": "curtail",
+                "$metadata": {
+                    "$model": "dtmi:com:flexchess:chessstatus;1"
+                }
+            },
+            {
+                "$dtId": "it-iren-chess1-simAL1",
+                "$etag": "W/\"03f69534-3b3a-4fdb-9d5f-333fa98e27aa\"",
+                "dataType": "REAL_MEASURE",
+                "levelType": "Nom",
+                "symbol": "A",
+                "unit": "A",
+                "value": "0",
+                "valueFormat": "NR2S..3.3",
+                "preferredName": {
+                    "$metadata": {}
+                },
+                "shortName": {
+                    "langString": {
+                        "EN": "it-iren-chess1-simAL1"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2025-01-21T13:53:26.5152570Z"
+                        }
+                    }
+                },
+                "definition": {
+                    "langString": {
+                        "EN": "Building SEDE_MARTINETTO_MRA_FV PV current"
+                    },
+                    "$metadata": {
+                        "langString": {
+                            "lastUpdateTime": "2025-01-21T13:53:26.5152570Z"
+                        }
+                    }
+                },
+                "$metadata": {
+                    "$model": "dtmi:digitaltwins:aas:DataSpecificationIEC61360;1"
+                }
+            }
+        ],
+        "relationships": [
+            {
+                "$relationshipId": "it-iren-chess1-simAccessControlPermissions-saFlexibilityProviderXRltPb3KZbnmekTxpOPMBxRpivQa",
+                "$sourceId": "it-iren-chess1-simAccessControlPermissions",
+                "$targetId": "saFlexibilityProviderXRltPb3KZbnmekTxpOPMBxRpivQa",
+                "$relationshipName": "targetSubjectAttributes",
+                "$etag": "W/\"9d4585c5-4b47-46df-8c7c-e4a67039711f\""
+            },
+            {
+                "$relationshipId": "it-iren-chess1-simAccessControlPermissions-saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa",
+                "$sourceId": "it-iren-chess1-simAccessControlPermissions",
+                "$targetId": "saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa",
+                "$relationshipName": "targetSubjectAttributes",
+                "$etag": "W/\"49e54dd6-c019-44af-a12d-c01778fa0ee5\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-sim->telemetry",
+                "$sourceId": "it-iren-chess1-sim",
+                "$targetId": "it-iren-chess1-simtelemetry",
+                "$relationshipName": "contains",
+                "$etag": "W/\"2e3ae59f-b4fe-46dc-9261-e4706404755e\""
+            },
+            {
+                "$relationshipId": "it-iren-chess1-sim->status-1",
+                "$sourceId": "it-iren-chess1-sim",
+                "$targetId": "it-iren-chess1-sim-status-1",
+                "$relationshipName": "contains",
+                "$etag": "W/\"8aec1905-1e90-41c3-b0cb-7cb4d3350686\""
+            },
+            {
+                "$relationshipId": "it-iren-chess1-sim->status-2",
+                "$sourceId": "it-iren-chess1-sim",
+                "$targetId": "it-iren-chess1-sim-status-2",
+                "$relationshipName": "contains",
+                "$etag": "W/\"5442d0a0-1ea8-446d-a912-ba8aa5bd0008\""
+            },
+            {
+                "$relationshipId": "it-iren-chess1-sim->status-3",
+                "$sourceId": "it-iren-chess1-sim",
+                "$targetId": "it-iren-chess1-sim-status-3",
+                "$relationshipName": "contains",
+                "$etag": "W/\"436e34f5-082c-4606-a4ff-b47c332cc3c8\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-simtelemetry-inverterRating",
+                "$sourceId": "it-iren-chess1-simtelemetry",
+                "$targetId": "sme-it-iren-chess1-siminverterRating",
+                "$relationshipName": "submodelElement",
+                "$etag": "W/\"b4e562cb-4bf3-4304-91d8-f72a1b121cf5\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-simtelemetry-efficiency",
+                "$sourceId": "it-iren-chess1-simtelemetry",
+                "$targetId": "sme-it-iren-chess1-simefficiency",
+                "$relationshipName": "submodelElement",
+                "$etag": "W/\"7a93db21-1a56-484b-aac9-597b854dfb5c\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-simtelemetry-peakPower",
+                "$sourceId": "it-iren-chess1-simtelemetry",
+                "$targetId": "sme-it-iren-chess1-simpeakPower",
+                "$relationshipName": "submodelElement",
+                "$etag": "W/\"89671797-dfac-4bd5-a990-c410708120d4\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-simtelemetry-orientation",
+                "$sourceId": "it-iren-chess1-simtelemetry",
+                "$targetId": "sme-it-iren-chess1-simorientation",
+                "$relationshipName": "submodelElement",
+                "$etag": "W/\"fac8cdbc-6993-41da-9b3e-f52a4a43b1ed\""
+            },
+            {
+                "$relationshipId": "sme-it-iren-chess1-simtelemetry-degradationRatio",
+                "$sourceId": "it-iren-chess1-simtelemetry",
+                "$targetId": "sme-it-iren-chess1-simdegradationRatio",
+                "$relationshipName": "submodelElement",
+                "$etag": "W/\"e6f22a92-786c-4bbe-b9ba-58044a3a393d\""
+            },      
+            {
+                "$relationshipId": "it-iren-chess1-simtelemetryAccessControlPermissions-saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa",
+                "$sourceId": "it-iren-chess1-simtelemetryAccessControlPermissions",
+                "$targetId": "saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa",
+                "$relationshipName": "targetSubjectAttributes",
+                "$etag": "W/\"10a46206-eda3-4c36-86e5-689a4d245800\""
+            },
+            {
+                "$relationshipId": "it-iren-chess1-simtelemetryAccessControlPermissions-saFlexibilityProviderXRltPb3KZbnmekTxpOPMBxRpivQa",
+                "$sourceId": "it-iren-chess1-simtelemetryAccessControlPermissions",
+                "$targetId": "saFlexibilityProviderXRltPb3KZbnmekTxpOPMBxRpivQa",
+                "$relationshipName": "targetSubjectAttributes",
+                "$etag": "W/\"c9643bd0-9406-4bdc-864c-1b4b613b2f0e\""
+            }
+        ]
+    }
+}
+  

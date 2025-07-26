@@ -1,0 +1,439 @@
+openapi: 3.0.0
+info:
+  title: Charging Station Monitoring API
+  version: 1.0.0
+  description: >
+    Single endpoint to receive bulk updates from a Charging Station Management
+    System (CSMS). The server is expected to update its internal database based
+    on the differential changes in the data and respond with a list of load
+    curves (one per charging station). A call to this endpoint is made as soon
+    as new data is available or if not data is available on a set interval.
+
+paths:
+  /cs/update:
+    post:
+      summary: Bulk update of Charging Station information
+      description: >
+        Receives an array of Charging Station updates (0..*) from the CSMS.  
+        Each Charging Station object may include its overall status, a list of
+        EVSEs, and their meter measurements.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChargingStationUpdate'
+      responses:
+        '200':
+          description: Successfully processed the updates. Returns a list of load curves (one per Charging Station).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoadCurve'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ======================
+    # == Charging Station ==
+    # ======================
+    ChargingStationUpdate:
+      type: object
+      required:
+        - id
+        - status
+        - evse
+      properties:
+        id:
+          type: string
+          description: >
+            Unique identifier of the Charging Station (across the entire system).
+        status:
+          type: string
+          description: >
+            Operational status of the Charging Station.  
+            - **Unknown**: The CSMS does not know the status of this charger.  
+            - **Available**: The charger is operating normally and can provide new charging sessions.  
+            - **Maintenance**: The charger operates normally but cannot be used for new charging sessions (e.g., maintenance mode).  
+            - **Faulted**: There is a problem with the charger; it is unable to operate.
+          enum:
+            - Unknown
+            - Available
+            - Maintenance
+            - Faulted
+        evse:
+          type: array
+          description: List of EVSE objects for this Charging Station
+          items:
+            $ref: '#/components/schemas/EVSEUpdate'
+
+    # ============
+    # == EVSE  ==
+    # ============
+    EVSEUpdate:
+      type: object
+      required:
+        - id
+        - status
+        - electric_meter
+      properties:
+        id:
+          type: string
+          description: >
+            Unique identifier of the EVSE within the Charging Station.
+        status:
+          type: string
+          description: >
+            Operational status of the EVSE.  
+            - **Unknown**: The CSMS does not know the status of this EVSE.  
+            - **Available**: Not occupied, can be used for a new charging session.  
+            - **Occupied**: An EV is connected, but not necessarily charging yet.  
+            - **Charging**: An EV is connected and actively receiving power.  
+            - **SuspendedEVSE**: EV is connected, but power is suspended by the EVSE (e.g., load balancing).  
+            - **SuspendedEV**: EV is connected, but power is suspended by the EV (vehicle not ready).  
+            - **Reserved**: This EVSE is reserved for a specific user and cannot be used by others.  
+            - **Maintenance**: EVSE is offline for maintenance and not available for new sessions.  
+            - **Faulted**: There is a problem with the EVSE preventing operation.
+          enum:
+            - Unknown
+            - Available
+            - Occupied
+            - Charging
+            - SuspendedEVSE
+            - SuspendedEV
+            - Reserved
+            - Maintenance
+            - Faulted
+        electric_meter:
+          type: array
+          description: List of meter measurements (0..*) reported for this EVSE
+          items:
+            $ref: '#/components/schemas/Measurement'
+
+    # =================
+    # == Measurement ==
+    # =================
+    Measurement:
+      type: object
+      description: >
+        Meter reading or measurement data, such as current import/export, voltage,
+        power, energy, etc.
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: >
+            The exact timestamp when the measurement was taken.
+        clockAligned:
+          type: boolean
+          description: >
+            True if the measurement is taken at configured clock-aligned intervals.
+        currentOffered:
+          type: number
+          description: Maximum overall current offered to EV (in A)
+        powerOffered:
+          type: number
+          description: Maximum overall power offered to EV (in W)
+        currentImport:
+          type: number
+          description: Instantaneous overall current flowing to EV (A)
+        currentImportN:
+          type: number
+          description: Instantaneous current on Neutral (A)
+        currentImportL1:
+          type: number
+          description: Instantaneous current on L1 (A)
+        currentImportL2:
+          type: number
+          description: Instantaneous current on L2 (A)
+        currentImportL3:
+          type: number
+          description: Instantaneous current on L3 (A)
+        powerActiveImport:
+          type: number
+          description: Instantaneous active power imported by EV (W)
+        powerActiveImportL1:
+          type: number
+          description: Instantaneous active power on L1 (W)
+        powerActiveImportL2:
+          type: number
+          description: Instantaneous active power on L2 (W)
+        powerActiveImportL3:
+          type: number
+          description: Instantaneous active power on L3 (W)
+        powerReactiveImport:
+          type: number
+          description: Instantaneous reactive power imported (VAR)
+        powerReactiveImportL1:
+          type: number
+          description: Instantaneous reactive power on L1 (VAR)
+        powerReactiveImportL2:
+          type: number
+          description: Instantaneous reactive power on L2 (VAR)
+        powerReactiveImportL3:
+          type: number
+          description: Instantaneous reactive power on L3 (VAR)
+        energyActiveImportRegister:
+          type: number
+          description: Cumulative active electrical energy imported (Wh)
+        energyActiveImportRegisterL1:
+          type: number
+          description: Cumulative active energy on L1 (Wh)
+        energyActiveImportRegisterL2:
+          type: number
+          description: Cumulative active energy on L2 (Wh)
+        energyActiveImportRegisterL3:
+          type: number
+          description: Cumulative active energy on L3 (Wh)
+        energyActiveImportInterval:
+          type: number
+          description: Interval-based active energy imported (Wh)
+        energyActiveImportIntervalL1:
+          type: number
+          description: Interval-based active energy on L1 (Wh)
+        energyActiveImportIntervalL2:
+          type: number
+          description: Interval-based active energy on L2 (Wh)
+        energyActiveImportIntervalL3:
+          type: number
+          description: Interval-based active energy on L3 (Wh)
+        energyReactiveImportRegister:
+          type: number
+          description: Cumulative reactive energy imported (VARh)
+        energyReactiveImportRegisterL1:
+          type: number
+          description: Reactive energy on L1 (VARh)
+        energyReactiveImportRegisterL2:
+          type: number
+          description: Reactive energy on L2 (VARh)
+        energyReactiveImportRegisterL3:
+          type: number
+          description: Reactive energy on L3 (VARh)
+        energyReactiveImportInterval:
+          type: number
+          description: Interval-based reactive energy imported (VARh)
+        energyReactiveImportIntervalL1:
+          type: number
+          description: Interval-based reactive energy on L1 (VARh)
+        energyReactiveImportIntervalL2:
+          type: number
+          description: Interval-based reactive energy on L2 (VARh)
+        energyReactiveImportIntervalL3:
+          type: number
+          description: Interval-based reactive energy on L3 (VARh)
+        currentExport:
+          type: number
+          description: Instantaneous overall current flowing from EV (A)
+        currentExportN:
+          type: number
+          description: Instantaneous current flow from EV on Neutral (A)
+        currentExportL1:
+          type: number
+          description: Instantaneous current flow from EV on L1 (A)
+        currentExportL2:
+          type: number
+          description: Instantaneous current flow from EV on L2 (A)
+        currentExportL3:
+          type: number
+          description: Instantaneous current flow from EV on L3 (A)
+        powerActiveExport:
+          type: number
+          description: Instantaneous active power exported by EV (W)
+        powerActiveExportL1:
+          type: number
+          description: Instantaneous active power on L1 (W)
+        powerActiveExportL2:
+          type: number
+          description: Instantaneous active power on L2 (W)
+        powerActiveExportL3:
+          type: number
+          description: Instantaneous active power on L3 (W)
+        powerReactiveExport:
+          type: number
+          description: Instantaneous reactive power exported (VAR)
+        powerReactiveExportL1:
+          type: number
+          description: Instantaneous reactive power on L1 (VAR)
+        powerReactiveExportL2:
+          type: number
+          description: Instantaneous reactive power on L2 (VAR)
+        powerReactiveExportL3:
+          type: number
+          description: Instantaneous reactive power on L3 (VAR)
+        energyActiveExportRegister:
+          type: number
+          description: Cumulative active energy exported (Wh)
+        energyActiveExportRegisterL1:
+          type: number
+          description: Active energy exported on L1 (Wh)
+        energyActiveExportRegisterL2:
+          type: number
+          description: Active energy exported on L2 (Wh)
+        energyActiveExportRegisterL3:
+          type: number
+          description: Active energy exported on L3 (Wh)
+        energyActiveExportInterval:
+          type: number
+          description: Interval-based active energy exported (Wh)
+        energyActiveExportIntervalL1:
+          type: number
+          description: Interval-based active energy exported on L1 (Wh)
+        energyActiveExportIntervalL2:
+          type: number
+          description: Interval-based active energy exported on L2 (Wh)
+        energyActiveExportIntervalL3:
+          type: number
+          description: Interval-based active energy exported on L3 (Wh)
+        energyReactiveExportRegister:
+          type: number
+          description: Cumulative reactive energy exported (VARh)
+        energyReactiveExportRegisterL1:
+          type: number
+          description: Reactive energy exported on L1 (VARh)
+        energyReactiveExportRegisterL2:
+          type: number
+          description: Reactive energy exported on L2 (VARh)
+        energyReactiveExportRegisterL3:
+          type: number
+          description: Reactive energy exported on L3 (VARh)
+        energyReactiveExportInterval:
+          type: number
+          description: Interval-based reactive energy exported (VARh)
+        energyReactiveExportIntervalL1:
+          type: number
+          description: Interval-based reactive energy exported on L1 (VARh)
+        energyReactiveExportIntervalL2:
+          type: number
+          description: Interval-based reactive energy exported on L2 (VARh)
+        energyReactiveExportIntervalL3:
+          type: number
+          description: Interval-based reactive energy exported on L3 (VARh)
+        voltage:
+          type: number
+          description: Instantaneous DC supply voltage (V) or AC RMS (phase unknown)
+        voltageL1N:
+          type: number
+          description: AC RMS voltage between L1 and N (V)
+        voltageL2N:
+          type: number
+          description: AC RMS voltage between L2 and N (V)
+        voltageL3N:
+          type: number
+          description: AC RMS voltage between L3 and N (V)
+        voltageL1L2:
+          type: number
+          description: AC RMS voltage between L1 and L2 (V)
+        voltageL2L3:
+          type: number
+          description: AC RMS voltage between L2 and L3 (V)
+        voltageL3L1:
+          type: number
+          description: AC RMS voltage between L3 and L1 (V)
+        frequency:
+          type: number
+          description: Power line frequency (Hz)
+        powerFactor:
+          type: number
+          description: Instantaneous overall power factor (−1 to 1)
+        powerFactorL1:
+          type: number
+          description: Power factor on L1 (−1 to 1)
+        powerFactorL2:
+          type: number
+          description: Power factor on L2 (−1 to 1)
+        powerFactorL3:
+          type: number
+          description: Power factor on L3 (−1 to 1)
+      required:
+        - timestamp
+
+    # ========================
+    # == LoadCurve (array) ==
+    # ========================
+    LoadCurve:
+      type: object
+      description: >
+        A load-curve object corresponding to a single Charging Station.
+        The server may return either `station_limit` or `evse_limit`.
+      properties:
+        csid:
+          type: string
+          description: Reference to the Charging Station ID
+        station_limit:
+          type: array
+          description: >
+            Array of station-wide limit points (if the station-level limits apply).
+            The station itself will apply local load balancing only when activated and available.
+          items:
+            $ref: '#/components/schemas/LoadPoint'
+        evse_limit:
+          type: array
+          description: >
+            Array of per-EVSE limits, each with its own set of points (if EVSE-level limits apply).
+            The station itself will NOT apply local load balancing only when not activated or not available.
+          items:
+            $ref: '#/components/schemas/EvseLimit'
+      oneOf:
+        - required: [station_limit]
+        - required: [evse_limit]
+      required:
+        - csid
+
+    # ==========================
+    # == EvseLimit object  ==
+    # ==========================
+    EvseLimit:
+      type: object
+      description: >
+        Limits for a particular EVSE within a Charging Station
+      properties:
+        evseid:
+          type: string
+          description: EVSE identifier (unique within its station)
+        limit:
+          type: array
+          description: Array of limit points for this EVSE
+          items:
+            $ref: '#/components/schemas/LoadPoint'
+      required:
+        - evseid
+        - limit
+
+    # ==========================
+    # == LoadPoint (point)  ==
+    # ==========================
+    LoadPoint:
+      type: object
+      description: >
+        A single time-current pair. The timestamp must be in the future.
+        Actuation is done at timestamp with value. If no further limits are imposed
+        The last limit acts as the de facto limit.
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp (UTC, with timezone), must be in the future
+        current:
+          type: number
+          format: float
+          description: Current in amperes (A)
+      required:
+        - timestamp
+        - current

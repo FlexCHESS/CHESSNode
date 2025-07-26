@@ -1,0 +1,1094 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "PV and HVAC Monitoring API",
+    "description": "PV and HVAC Monitoring API (ASP.NET Core 7.0)",
+    "termsOfService": "https://umbrellaiot.com",
+    "contact": {
+      "name": "Swagger Codegen Contributors",
+      "url": "https://github.com/swagger-api/swagger-codegen",
+      "email": ""
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/init": {
+      "post": {
+        "tags": [
+          "DefaultApi"
+        ],
+        "summary": "The controller for handling the initialisation of CHESS adapter",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IO.Swagger.Controllers.DefaultApiController+CHESS"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/status/{id}": {
+      "post": {
+        "tags": [
+          "DefaultApi"
+        ],
+        "summary": "The controller for handling the status setting / retrieval from CHESS",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IO.Swagger.Controllers.DefaultApiController+CHESS"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "DefaultApi"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/update": {
+      "post": {
+        "tags": [
+          "DefaultApi"
+        ],
+        "summary": "Trigger update of PV/HVAC information",
+        "description": "Receives an array of timeseries data",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IO.Swagger.Models.CHESSData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully processed the updates",
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Azure.DigitalTwins.Core.DigitalTwinMetadata": {
+        "type": "object",
+        "properties": {
+          "$model": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyMetadata": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Azure.DigitalTwins.Core.DigitalTwinPropertyMetadata"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Azure.DigitalTwins.Core.DigitalTwinPropertyMetadata": {
+        "type": "object",
+        "properties": {
+          "lastUpdateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Azure.ETag": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "IO.Swagger.Controllers.DefaultApiController+CHESS": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IoT.Services.ChessStatus"
+            },
+            "nullable": true
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IoT.Services.ChessStatus"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IO.Swagger.Models.CHESSData": {
+        "type": "object",
+        "properties": {
+          "mrD_GN_UFC_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "description": "Reference to the Data Element",
+            "nullable": true
+          },
+          "mrD_GN_UFC_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_UFC_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_PFLsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CDZ_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrD_GN_CK_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_GN_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrC_GN_CDZ_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_A_WLsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrB_GN_FV_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_AL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_AL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_AL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_Hz": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_kWh": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_PFL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_PFL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_PFL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_PFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_VFFsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_WL1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_WL2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_WL3": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          },
+          "mrA_P8_CDZ_Wsys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IO.Swagger.Models.CHESSDataElement"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A CHESS data for PV / HVAC time series data"
+      },
+      "IO.Swagger.Models.CHESSDataElement": {
+        "required": [
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Reference to the Data Element"
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "uom": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A CHESS data element for PV / HVAC time series data"
+      },
+      "IoT.Services.ChessStatus": {
+        "type": "object",
+        "properties": {
+          "$dtId": {
+            "type": "string",
+            "nullable": true
+          },
+          "$etag": {
+            "$ref": "#/components/schemas/Azure.ETag"
+          },
+          "$lastUpdateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "$metadata": {
+            "$ref": "#/components/schemas/Azure.DigitalTwins.Core.DigitalTwinMetadata"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "service": {
+            "type": "string",
+            "nullable": true
+          },
+          "starttime": {
+            "type": "string",
+            "nullable": true
+          },
+          "endtime": {
+            "type": "string",
+            "nullable": true
+          },
+          "capacity": {
+            "type": "string",
+            "nullable": true
+          },
+          "recurrence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      }
+    }
+  }
+}
+

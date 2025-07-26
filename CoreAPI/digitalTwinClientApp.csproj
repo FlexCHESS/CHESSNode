@@ -1,0 +1,172 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="AccessControl.cs" />
+    <Compile Remove="AccessControlPolicyPoints.cs" />
+    <Compile Remove="AccessControlPolicyPointsPolicyAdministrationPointRelationship.cs" />
+    <Compile Remove="AccessControlPolicyPointsPolicyAdministrationPointRelationshipCollection.cs" />
+    <Compile Remove="AccessPermissionRule.cs" />
+    <Compile Remove="AccessPermissionRuleConstraintRelationship.cs" />
+    <Compile Remove="AccessPermissionRuleConstraintRelationshipCollection.cs" />
+    <Compile Remove="AccessPermissionRulePermissionsPerObjectRelationship.cs" />
+    <Compile Remove="AccessPermissionRulePermissionsPerObjectRelationshipCollection.cs" />
+    <Compile Remove="AccessPermissionRuleTargetSubjectAttributesRelationship.cs" />
+    <Compile Remove="AccessPermissionRuleTargetSubjectAttributesRelationshipCollection.cs" />
+    <Compile Remove="AdministrationInformation.cs" />
+    <Compile Remove="AnnotatedRelationshipElement.cs" />
+    <Compile Remove="AnnotatedRelationshipElementAnnotationRelationship.cs" />
+    <Compile Remove="AnnotatedRelationshipElementAnnotationRelationshipCollection.cs" />
+    <Compile Remove="AssetAdministrationShell.cs" />
+    <Compile Remove="AssetAdministrationShellAssetInformationRelationship.cs" />
+    <Compile Remove="AssetAdministrationShellAssetInformationRelationshipCollection.cs" />
+    <Compile Remove="AssetAdministrationShellDerivedFromRelationship.cs" />
+    <Compile Remove="AssetAdministrationShellDerivedFromRelationshipCollection.cs" />
+    <Compile Remove="AssetAdministrationShellSubmodelRelationship.cs" />
+    <Compile Remove="AssetAdministrationShellSubmodelRelationshipCollection.cs" />
+    <Compile Remove="AssetInformation.cs" />
+    <Compile Remove="AssetInformationDefaultThumbnailRelationship.cs" />
+    <Compile Remove="AssetInformationDefaultThumbnailRelationshipCollection.cs" />
+    <Compile Remove="AssetInformationGlobalAssetIdRelationship.cs" />
+    <Compile Remove="AssetInformationGlobalAssetIdRelationshipCollection.cs" />
+    <Compile Remove="AssetInformationSpecificAssetIdRelationship.cs" />
+    <Compile Remove="AssetInformationSpecificAssetIdRelationshipCollection.cs" />
+    <Compile Remove="AssetInfoShort.cs" />
+    <Compile Remove="AssetKind.cs" />
+    <Compile Remove="BasicEventElement.cs" />
+    <Compile Remove="BasicEventElementMessageBrokerRelationship.cs" />
+    <Compile Remove="BasicEventElementMessageBrokerRelationshipCollection.cs" />
+    <Compile Remove="BasicEventElementObservedRelationship.cs" />
+    <Compile Remove="BasicEventElementObservedRelationshipCollection.cs" />
+    <Compile Remove="Blob.cs" />
+    <Compile Remove="BooleanProperty.cs" />
+    <Compile Remove="Capability.cs" />
+    <Compile Remove="ConceptDescription.cs" />
+    <Compile Remove="ConceptDescriptionIsCaseOfRelationship.cs" />
+    <Compile Remove="ConceptDescriptionIsCaseOfRelationshipCollection.cs" />
+    <Compile Remove="DataElement.cs" />
+    <Compile Remove="DataSpecification.cs" />
+    <Compile Remove="DataSpecificationContent.cs" />
+    <Compile Remove="DataSpecificationHasContentRelationship.cs" />
+    <Compile Remove="DataSpecificationHasContentRelationshipCollection.cs" />
+    <Compile Remove="DataSpecificationIEC61360.cs" />
+    <Compile Remove="DataSpecificationIEC61360UnitIdRelationship.cs" />
+    <Compile Remove="DataSpecificationIEC61360UnitIdRelationshipCollection.cs" />
+    <Compile Remove="DataSpecificationIEC61360ValueListRelationship.cs" />
+    <Compile Remove="DataSpecificationIEC61360ValueListRelationshipCollection.cs" />
+    <Compile Remove="DateProperty.cs" />
+    <Compile Remove="DateTimeProperty.cs" />
+    <Compile Remove="DoubleProperty.cs" />
+    <Compile Remove="DurationProperty.cs" />
+    <Compile Remove="Entity.cs" />
+    <Compile Remove="EntityGlobalAssetIdRelationship.cs" />
+    <Compile Remove="EntityGlobalAssetIdRelationshipCollection.cs" />
+    <Compile Remove="EntitySpecificAssetIdRelationship.cs" />
+    <Compile Remove="EntitySpecificAssetIdRelationshipCollection.cs" />
+    <Compile Remove="EntityStatementRelationship.cs" />
+    <Compile Remove="EntityStatementRelationshipCollection.cs" />
+    <Compile Remove="Environment.cs" />
+    <Compile Remove="EnvironmentAssetAdministrationShellRelationship.cs" />
+    <Compile Remove="EnvironmentAssetAdministrationShellRelationshipCollection.cs" />
+    <Compile Remove="EnvironmentConceptDescriptionRelationship.cs" />
+    <Compile Remove="EnvironmentConceptDescriptionRelationshipCollection.cs" />
+    <Compile Remove="EnvironmentSubmodelRelationship.cs" />
+    <Compile Remove="EnvironmentSubmodelRelationshipCollection.cs" />
+    <Compile Remove="EventElement.cs" />
+    <Compile Remove="EventMessage.cs" />
+    <Compile Remove="EventMessageObservableReferenceRelationship.cs" />
+    <Compile Remove="EventMessageObservableReferenceRelationshipCollection.cs" />
+    <Compile Remove="EventMessageObservableSemanticIdRelationship.cs" />
+    <Compile Remove="EventMessageObservableSemanticIdRelationshipCollection.cs" />
+    <Compile Remove="EventMessageSourceRelationship.cs" />
+    <Compile Remove="EventMessageSourceRelationshipCollection.cs" />
+    <Compile Remove="EventMessageSourceSemanticIdRelationship.cs" />
+    <Compile Remove="EventMessageSourceSemanticIdRelationshipCollection.cs" />
+    <Compile Remove="EventPayload.cs" />
+    <Compile Remove="Extension.cs" />
+    <Compile Remove="File.cs" />
+    <Compile Remove="FloatProperty.cs" />
+    <Compile Remove="Formula.cs" />
+    <Compile Remove="HasDataSpecification.cs" />
+    <Compile Remove="HasExtensions.cs" />
+    <Compile Remove="HasKind.cs" />
+    <Compile Remove="HasSemantics.cs" />
+    <Compile Remove="Identifiable.cs" />
+    <Compile Remove="IntegerProperty.cs" />
+    <Compile Remove="Key.cs" />
+    <Compile Remove="LangStringSet.cs" />
+    <Compile Remove="LongProperty.cs" />
+    <Compile Remove="MultiLanguageProperty.cs" />
+    <Compile Remove="ObjectAttributes.cs" />
+    <Compile Remove="Operation.cs" />
+    <Compile Remove="OperationVariable.cs" />
+    <Compile Remove="Permission.cs" />
+    <Compile Remove="PermissionsPerObject.cs" />
+    <Compile Remove="Property.cs" />
+    <Compile Remove="Qualifiable.cs" />
+    <Compile Remove="Qualifier.cs" />
+    <Compile Remove="Range.cs" />
+    <Compile Remove="Referable.cs" />
+    <Compile Remove="Reference.cs" />
+    <Compile Remove="ReferenceElement.cs" />
+    <Compile Remove="RelationshipElement.cs" />
+    <Compile Remove="RelationshipElementFirstModelRefRelationship.cs" />
+    <Compile Remove="RelationshipElementFirstModelRefRelationshipCollection.cs" />
+    <Compile Remove="RelationshipElementFirstRelationship.cs" />
+    <Compile Remove="RelationshipElementFirstRelationshipCollection.cs" />
+    <Compile Remove="RelationshipElementSecondModelRefRelationship.cs" />
+    <Compile Remove="RelationshipElementSecondModelRefRelationshipCollection.cs" />
+    <Compile Remove="RelationshipElementSecondRelationship.cs" />
+    <Compile Remove="RelationshipElementSecondRelationshipCollection.cs" />
+    <Compile Remove="Resource.cs" />
+    <Compile Remove="Security.cs" />
+    <Compile Remove="SpecificAssetId.cs" />
+    <Compile Remove="StringProperty.cs" />
+    <Compile Remove="SubjectAttributes.cs" />
+    <Compile Remove="Submodel.cs" />
+    <Compile Remove="SubmodelDataSpecificationRefRelationship.cs" />
+    <Compile Remove="SubmodelDataSpecificationRefRelationshipCollection.cs" />
+    <Compile Remove="SubmodelDataSpecificationRelationship.cs" />
+    <Compile Remove="SubmodelDataSpecificationRelationshipCollection.cs" />
+    <Compile Remove="SubmodelElement.cs" />
+    <Compile Remove="SubmodelElementCollection.cs" />
+    <Compile Remove="SubmodelElementCollectionValueRelationship.cs" />
+    <Compile Remove="SubmodelElementCollectionValueRelationshipCollection.cs" />
+    <Compile Remove="SubmodelElementList.cs" />
+    <Compile Remove="SubmodelElementListSemanticIdListElementRelationship.cs" />
+    <Compile Remove="SubmodelElementListSemanticIdListElementRelationshipCollection.cs" />
+    <Compile Remove="SubmodelElementListValueRelationship.cs" />
+    <Compile Remove="SubmodelElementListValueRelationshipCollection.cs" />
+    <Compile Remove="SubmodelSemanticIdRelationship.cs" />
+    <Compile Remove="SubmodelSemanticIdRelationshipCollection.cs" />
+    <Compile Remove="SubmodelSubmodelElementRelationship.cs" />
+    <Compile Remove="SubmodelSubmodelElementRelationshipCollection.cs" />
+    <Compile Remove="SubmodelSupplementalSemanticIdRelationship.cs" />
+    <Compile Remove="SubmodelSupplementalSemanticIdRelationshipCollection.cs" />
+    <Compile Remove="Tags.cs" />
+    <Compile Remove="TimeProperty.cs" />
+    <Compile Remove="ValueList.cs" />
+    <Compile Remove="ValueReferencePair.cs" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Azure.DigitalTwins.Core" Version="1.4.0" />
+    <PackageReference Include="Azure.Identity" Version="1.9.0" />
+    <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CAL_Api">
+      <HintPath>..\..\MessagesToCHESS\MessagesToCHESS\MessagesToCHESS.AF\CAL_Api.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
