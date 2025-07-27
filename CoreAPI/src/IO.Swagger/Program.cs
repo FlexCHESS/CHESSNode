@@ -164,6 +164,11 @@ namespace IO.Swagger
         public static UUDEXWebClient uudexClient;
         public static String CHESSNodeKey = "";
         public static String guid = "";
+        public static String _adtServiceUrl = "";
+        public static String _adtClientId = "";
+        public static String _adtClientSecret = "";
+        public static String _adtTenantId = "";
+
 
         // We need to persist this data as it is required after reboot.
         // local persistent storage is an option - ToDo
@@ -434,6 +439,11 @@ namespace IO.Swagger
             String token = System.Environment.GetEnvironmentVariable("AUTH_TOKEN");
             CHESSNodeKey = System.Environment.GetEnvironmentVariable("CHESS_NODE_KEY");
             String prefix = System.Environment.GetEnvironmentVariable("CHESS_PREFIX");
+
+            _adtServiceUrl = System.Environment.GetEnvironmentVariable("adtServiceUrl", EnvironmentVariableTarget.Process);
+            _adtClientId = System.Environment.GetEnvironmentVariable("adtClientId", EnvironmentVariableTarget.Process);
+            _adtClientSecret = System.Environment.GetEnvironmentVariable("adtClientSecret", EnvironmentVariableTarget.Process);
+            _adtTenantId = System.Environment.GetEnvironmentVariable("adtTenantId", EnvironmentVariableTarget.Process);
 
             X509Certificate2 cert = new X509Certificate2(path, pass);
             uudexClient = new UUDEXWebClient(cert);

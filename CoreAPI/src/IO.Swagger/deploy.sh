@@ -7,4 +7,8 @@ sed -i 's/<PORT>/'$5'/g' /tmp/chess.yaml
 sed -i 's/<MOUNTNAME>/'$6'/g' /tmp/chess.yaml
 sed -i 's/<MOUNTPATH>/'$7'/g' /tmp/chess.yaml
 sed -i 's/<MOUNTHOSTPATH>/'$8'/g' /tmp/chess.yaml
+sed -i 's/<adtUrl>/'$9'/g' /tmp/chess.yaml
+sed -i 's/<adtClientId>/'$10'/g' /tmp/chess.yaml
+sed -i 's/<adtClientSecret>/'$11'/g' /tmp/chess.yaml
+sed -i 's/<adtTenantId>/'$12'/g' /tmp/chess.yaml
 KUBECONFIG=/app/dcconfig.txt /app/kubectl apply -f /tmp/chess.yaml 

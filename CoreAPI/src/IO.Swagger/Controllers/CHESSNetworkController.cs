@@ -217,9 +217,9 @@ namespace IO.Swagger.Controllers
             startInfo.FileName = "bash";
             String[] mounts = body.adapter.volumeMount.Split(" ");
             if (mounts.Length == 3)
-                startInfo.Arguments = "deploy.sh " + body.adapter.identifier + " " + body.adapter.container.Replace("/", "\\/").Replace(".", "\\.") + " " + body.adapter.credentials + " " + body.adapter.envconf + " " + body.adapter.exposedPort + " " + mounts[0].Replace("/", "\\/") + " " + mounts[1].Replace("/", "\\/") + " " + mounts[2].Replace("/", "\\/");
+                startInfo.Arguments = "deploy.sh " + body.adapter.identifier + " " + body.adapter.container.Replace("/", "\\/").Replace(".", "\\.") + " " + body.adapter.credentials + " " + body.adapter.envconf + " " + body.adapter.exposedPort + " " + mounts[0].Replace("/", "\\/") + " " + mounts[1].Replace("/", "\\/") + " " + mounts[2].Replace("/", "\\/") + " " + Program._adtServiceUrl + " " + Program._adtClientId + " " + Program._adtClientSecret + " " + Program._adtTenantId;
             else
-                startInfo.Arguments = "deploy.sh " + body.adapter.identifier + " " + body.adapter.container.Replace("/", "\\/").Replace(".", "\\.") + " " + body.adapter.credentials + " " + body.adapter.envconf + " " + body.adapter.exposedPort + " tmp \\/tmp \\/tmp";
+                startInfo.Arguments = "deploy.sh " + body.adapter.identifier + " " + body.adapter.container.Replace("/", "\\/").Replace(".", "\\.") + " " + body.adapter.credentials + " " + body.adapter.envconf + " " + body.adapter.exposedPort + " tmp \\/tmp \\/tmp" + " " + Program._adtServiceUrl + " " + Program._adtClientId + " " + Program._adtClientSecret + " " + Program._adtTenantId;
             process.StartInfo = startInfo;
             process.Start();
             Console.WriteLine(process);

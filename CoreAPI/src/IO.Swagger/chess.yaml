@@ -39,9 +39,9 @@ spec:
         - name: AAS_URL
           value: "http://aasserver/api/v3.0"
         - name: "adtServiceUrl"
-          value: "https://DT-test-1.api.weu.digitaltwins.azure.net"
+          value: "<adtUrl>"
         - name: "adtClientId"
-          value: "<adtClientId"
+          value: "<adtClientId>"
         - name: "adtClientSecret"
           value: "<adtClientSecret>"
         - name: "adtTenantId"
