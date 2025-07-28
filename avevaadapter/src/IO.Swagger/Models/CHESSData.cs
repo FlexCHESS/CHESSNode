@@ -252,7 +252,7 @@ namespace IO.Swagger.Models
 	    public CHESSDataElement[] MRA_P8_CDZ_WL2 { get; set; }
 	    [DataMember(Name="EDMS_SD_MRT_MRA_P8-CDZ_WL3")]
 	    public CHESSDataElement[] MRA_P8_CDZ_WL3 { get; set; }
-	    [DataMember(Name="EDMS_SD_MRT_MRA_P8 -CDZ_Wsys")]
+	    [DataMember(Name="EDMS_SD_MRT_MRA_P8-CDZ_Wsys")]
 	    public CHESSDataElement[] MRA_P8_CDZ_Wsys { get; set; } 
 
 
