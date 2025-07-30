@@ -150,8 +150,6 @@ Core API yaml file:
         - name: "PFX_CERT_PATH"
           value: "uudex.pfx"
         - name: "PFX_CERT_PASS"
-          value: "uudex.pfx"
-        - name: "PFX_CERT_PASS"
           value: "flexchess1234"
         - name: "CHESS_NODE"
           value: "<Participant ID>"
@@ -159,6 +157,14 @@ Core API yaml file:
           value: "it-"
         - name: "AUTH_TOKEN"
           value: "<Token>"
+        - name: "adtServiceUrl"
+          value: "<ADT URL>"
+        - name: "adtClientId"
+          value: "<adtClientId>"
+        - name: "adtClientSecret"
+          value: "<adtClientSecret>"
+        - name: "adtTenantId"
+          value: "<adtTenantId>"
       nodeSelector:
          kubernetes.io/arch: amd64
 ```
