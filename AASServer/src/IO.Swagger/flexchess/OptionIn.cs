@@ -21,7 +21,7 @@ namespace IoT.Services
         [JsonPropertyName("Option")]
         public String option { get; set; }
         [JsonPropertyName("Status")]
-        public ChessStatus status { get; set; }
+        public ChessStatus[] status { get; set; }
         
 
         public override bool Equals(object? obj)
