@@ -284,11 +284,13 @@ namespace IO.Swagger.Controllers
         }
 
         // Post -  remote HTTP request
-        private string Post(string uri, string json)
+        private string Post(string uri, string json, string token)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             request.Timeout = 120000;
+            if (token != null)
+                request.Headers.Add("Authorization", token);
 
             var data = Encoding.ASCII.GetBytes(json);
 
@@ -1427,13 +1429,14 @@ namespace IO.Swagger.Controllers
         /// <summary>
         /// Invoke the optimiser synchronously with specified limits and objectives
         /// </summary>
-        /// <remarks>  </remarks>
+        /// <remarks> The available options are requested from the local EMS adapter to pass to the optimiser </remarks>
         /// <param name="body"></param>
         /// <response code="200">Successfully processed the updates</response>
         /// <response code="400">Bad request</response>
         /// <response code="422">Unprocessable entity</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="500">Internal server error</response>
+        /// <response code="503">Server busy</response>
         [HttpPost]
         [Route("/run")]
         [Route("/opt/1.0.0/run")]
@@ -1442,12 +1445,26 @@ namespace IO.Swagger.Controllers
         [ValidateModelState]
         [SwaggerOperation("runPost")]
         [SwaggerResponse(statusCode: 200, type: typeof(OptimiserOut[]), description: "Successfully executed optimisation")]
-        public virtual IActionResult runPost([FromBody]OptimiserIn[] body, [FromHeader] String Authorization) // [FromHeader] String X-adt-host)
+        public virtual IActionResult runPost([FromBody]OptimiserIn[] body, [FromHeader] String Authorization) 
         {
 
 
-                // Placeholder that will be overidden by the optimiser adapter (BEM adapter) endpoint
-                return Json(new OptimiserOut());
+                String result = "[";
+                // Call the EMS endpoint
+
+                foreach(OptimiserIn option in body)
+                    foreach(OptionIn optionIn in option.Options)
+                    {
+                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(optionIn);
+                        Console.WriteLine("EMS request for " + json);
+                        result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"CHESS\":" + Post("http://emsadapter.default.svc/current", json, Authorization) + "},";
+                    }
+
+                // todo - aggregate the input schedules and pass to the optimier
+
+                Console.WriteLine("Result  " + result);
+
+                return Json(JsonConvert.DeserializeObject(result.Trim(',')+"]"));
         }
     }
 }
