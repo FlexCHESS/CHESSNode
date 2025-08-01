@@ -42,7 +42,8 @@ namespace IoT.Services
         public Double capacityMax{ get; set; }
         [JsonPropertyName("cycleCost")]
         public Double cycleCost{ get; set; }      
-
+        [JsonPropertyName("cycleCarbon")]
+        public Double cycleCarbon{ get; set; } 
 
         public override bool Equals(object? obj)
         {
