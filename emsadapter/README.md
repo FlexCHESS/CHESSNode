@@ -1,13 +1,13 @@
-# Charging Station Monitoring and Control System Adapter
---------------------------------------------------------
-Single endpoint to receive bulk updates from a Charging Station Management System (CSMS). 
-The server is expected to update its internal database based on the differential changes in the data and respond with a list of load curves (one per charging station). A call to this endpoint is made as soon as new data is available or if not data is available on a set interval. 
+# Smart Energy Management System Adapter
+-----------------------------------------
+Provides Energy Management System (EMS) functions and /ems API endpoint. 
+The EMS adapter can estimate the cost and priority of the different assets in support of flexibility service targets, such as peak shaving and load shifting. 
 
 ## Build
 --------
 
 ```
-Docker build -t evcsadapter:latest .
+Docker build -t emsadapter:latest .
 
 ```
 
@@ -29,7 +29,7 @@ Using the /register Core API operation
    "VolumeMount":""
   },
  "chess":[{
-   "Identifier":"evcsadapter",
+   "Identifier":"emsadapter",
    "Location":"<location>",
    "Standard":"REST",
    "Version":"1.0",
