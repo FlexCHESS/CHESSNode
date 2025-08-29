@@ -882,12 +882,9 @@ namespace IO.Swagger.Controllers
                                                 } else
                                                     Console.WriteLine("Cannot get identification data from DT");
 
+                                                // available capacity is max energy less prior committment / use
                                                 Double thisCapacity = currentStatus.capacityEnd; 
-                                                currentStatus.cycleCost =  cycleCost( thisCapacity/maxEnergy, currentStatus.capacityStart/maxEnergy, batteryType );
-                                                currentStatus.cycleCarbon =  cycleCarbon( thisCapacity/maxEnergy, currentStatus.capacityStart/maxEnergy, batteryType );
-                                                currentStatus.cycleCostUnit = "€/kWh";
-                                                currentStatus.cycleCarbonUnit = "g/kWh";
-
+                                                
                                                 // see if we are energy capacity or power limited 
                                                 if (maxEnergy * efficiency > thisCapacity)
                                                 {
@@ -910,6 +907,11 @@ namespace IO.Swagger.Controllers
                                                         currentStatus.capacityMax = thisCapacity + availableCapacity;
                                                         targetCapacity -= availableCapacity;
                                                     }
+                                                    currentStatus.cycleCost =  cycleCost( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
+                                                    currentStatus.cycleCarbon =  cycleCarbon( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
+                                                    currentStatus.cycleCostUnit = "€/kWh";
+                                                    currentStatus.cycleCarbonUnit = "g/kWh";
+
                                                     if (res.IndexOf(currentState) < 0)
                                                         res.Add(currentState);
                                                 }
