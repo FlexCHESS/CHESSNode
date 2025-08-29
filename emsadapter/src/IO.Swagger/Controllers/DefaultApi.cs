@@ -322,10 +322,10 @@ namespace IO.Swagger.Controllers
                                     Double capacityEnd = 0;
 
                                     // Determine the available proportion of capacity for the requested period
-                                    if (thisStart > start)
+                                    if (TimeSpan.Compare(thisStart,start) >= 0)
                                     {
                                          capacityStart = 0;
-                                        if (end > thisEnd)
+                                        if (TimeSpan.Compare(end, thisEnd) >= 0)
                                         {
                                             capacityEnd = capacity;
                                         } else {
@@ -333,7 +333,7 @@ namespace IO.Swagger.Controllers
                                         }
                                     } else {
                                         capacityStart = (Double) ((start - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                        if (end > thisEnd)
+                                        if (TimeSpan.Compare(end,thisEnd) >= 0)
                                         {
                                             capacityEnd = capacityStart + (Double) ((thisEnd - start).TotalMinutes) * capacity / period.TotalMinutes;
                                         } else {
@@ -746,10 +746,10 @@ namespace IO.Swagger.Controllers
                                     Double capacityEnd = 0;
                                     
                                     // Determine the available proportion of capacity for the requested period
-                                    if (thisStart > start)
+                                    if (TimeSpan.Compare(thisStart,start) >= 0)
                                     {
                                          capacityStart = 0;
-                                        if (end > thisEnd)
+                                        if (TimeSpan.Compare(end, thisEnd) >= 0)
                                         {
                                             capacityEnd = capacity;
                                         } else {
@@ -757,7 +757,7 @@ namespace IO.Swagger.Controllers
                                         }
                                     } else {
                                         capacityStart = (Double) ((start - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                        if (end > thisEnd)
+                                        if (TimeSpan.Compare(end,thisEnd) >= 0)
                                         {
                                             capacityEnd = capacityStart + (Double) ((thisEnd - start).TotalMinutes) * capacity / period.TotalMinutes;
                                         } else {
@@ -765,6 +765,7 @@ namespace IO.Swagger.Controllers
 
                                         }
                                     }
+
 
                                     if (capacityStart > capacity) capacityStart = capacity;
                                     if (capacityEnd > capacity) capacityEnd = capacity;
