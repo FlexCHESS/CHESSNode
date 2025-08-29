@@ -317,15 +317,31 @@ namespace IO.Swagger.Controllers
                                     TimeSpan thisEnd = new TimeSpan(endHour, endMinute, 0);
 
                                     TimeSpan period = thisEnd-thisStart;
-                                    TimeSpan overlap = new TimeSpan(0,0,0);
+                        
                                     Double capacityStart = 0;
                                     Double capacityEnd = 0;
-                                    if ((start - thisStart).TotalMinutes >= 0)
+
+                                    // Determine the available proportion of capacity for the requested period
+                                    if (thisStart > start)
                                     {
-                                       Console.WriteLine("Overlap is " + (start - thisStart).TotalMinutes);
-                                       capacityStart = (Double) ((start-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                       capacityEnd = (Double) ((end-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                         capacityStart = 0;
+                                        if (end > thisEnd)
+                                        {
+                                            capacityEnd = capacity;
+                                        } else {
+                                            capacityEnd = (Double) ((end - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                        }
+                                    } else {
+                                        capacityStart = (Double) ((start - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                        if (end > thisEnd)
+                                        {
+                                            capacityEnd = capacityStart + (Double) ((thisEnd - start).TotalMinutes) * capacity / period.TotalMinutes;
+                                        } else {
+                                            capacityEnd = capacityStart + (Double) ((end - start).TotalMinutes) * capacity / period.TotalMinutes;
+
+                                        }
                                     }
+
                                     if (capacityStart > capacity) capacityStart = capacity;
                                     if (capacityEnd > capacity) capacityEnd = capacity;
                        
@@ -424,7 +440,7 @@ namespace IO.Swagger.Controllers
                                                 if (maxEnergy * efficiency > thisCapacity)
                                                 {
                                                     Console.WriteLine("Can increase this capacity " + currentState.id);
-                                                    currentStatus.efficiency = efficiency;
+                                                    currentStatus.efficiency = efficiency*100;
                                                
                                                     Double availableCapacity = maxEnergy * (1-minSoC/100) * efficiency - thisCapacity;
                                                     Double energyLimit = efficiency * power80 * (end-start).TotalMinutes / 60;    
@@ -628,6 +644,27 @@ namespace IO.Swagger.Controllers
                 res = (21460/28.2) / (2 * N3[i] * (SocMax - SocMin));
             return res;
         }
+         
+        // Estimate cycle carbon using empirical  model
+        protected Double cycleCarbon(Double SocMax, Double SocMin, String batteryType)
+        {
+            Console.WriteLine("Soc max " + SocMax + " Soc min " + SocMin + " type " + batteryType);
+            Double res = 0;
+
+            Double[] N1  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};     // This is the carbon model which we will estimate
+            Double[] N2  = {10000,9500,9000,8500,8000,7500,7000,6500,6000,5500};     // This is the carbon model which we will estimate
+            Double[] N3  = {10000,9750,9500,9250,9000,8750,8500,8250,8000,7750};     // This is the carbon model which we will estimate
+            
+            int i = (int)( (SocMax - SocMin) * 10 );
+        
+            if (batteryType.ToLower().Equals("li-ion"))  
+                res = (9460/28.2) / (2 * N1[i] * (SocMax - SocMin));
+            else if (batteryType.ToLower().Equals("lfp"))
+                res = (11460/28.2) / (2 * N2[i] * (SocMax - SocMin));
+            else if (batteryType.ToLower().Equals("lto"))
+                res = (21460/28.2) / (2 * N3[i] * (SocMax - SocMin));
+            return res;
+        }
   
 
         /// <summary>
@@ -707,12 +744,28 @@ namespace IO.Swagger.Controllers
                                     TimeSpan overlap = new TimeSpan(0,0,0);
                                     Double capacityStart = 0;
                                     Double capacityEnd = 0;
-                                    if ((start - thisStart).TotalMinutes >= 0)
+                                    
+                                    // Determine the available proportion of capacity for the requested period
+                                    if (thisStart > start)
                                     {
-                                       Console.WriteLine("Overlap is " + (start - thisStart).TotalMinutes);
-                                       capacityStart = (Double) ((start-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                       capacityEnd = (Double) ((end-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                         capacityStart = 0;
+                                        if (end > thisEnd)
+                                        {
+                                            capacityEnd = capacity;
+                                        } else {
+                                            capacityEnd = (Double) ((end - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                        }
+                                    } else {
+                                        capacityStart = (Double) ((start - thisStart).TotalMinutes) * capacity / period.TotalMinutes;
+                                        if (end > thisEnd)
+                                        {
+                                            capacityEnd = capacityStart + (Double) ((thisEnd - start).TotalMinutes) * capacity / period.TotalMinutes;
+                                        } else {
+                                            capacityEnd = capacityStart + (Double) ((end - start).TotalMinutes) * capacity / period.TotalMinutes;
+
+                                        }
                                     }
+
                                     if (capacityStart > capacity) capacityStart = capacity;
                                     if (capacityEnd > capacity) capacityEnd = capacity;
                        
@@ -721,6 +774,7 @@ namespace IO.Swagger.Controllers
                                     Console.WriteLine("Capacity at end is " + capacityEnd+ " of total " + capacity);
                                     currentStatus.capacityStart = capacityStart;
                                     currentStatus.capacityEnd = capacityEnd;
+
                                 }
                             }
 
@@ -829,12 +883,15 @@ namespace IO.Swagger.Controllers
 
                                                 Double thisCapacity = currentStatus.capacityEnd; 
                                                 currentStatus.cycleCost =  cycleCost( thisCapacity/maxEnergy, currentStatus.capacityStart/maxEnergy, batteryType );
+                                                currentStatus.cycleCarbon =  cycleCarbon( thisCapacity/maxEnergy, currentStatus.capacityStart/maxEnergy, batteryType );
+                                                currentStatus.cycleCostUnit = "€/kWh";
+                                                currentStatus.cycleCarbonUnit = "g/kWh";
 
                                                 // see if we are energy capacity or power limited 
                                                 if (maxEnergy * efficiency > thisCapacity)
                                                 {
                                                     Console.WriteLine("Can increase this capacity " + currentState.id);
-                                                    currentStatus.efficiency = efficiency;
+                                                    currentStatus.efficiency = efficiency*100;
                                                
                                                     Double availableCapacity = maxEnergy * (1-minSoC/100) * efficiency - thisCapacity;
                                                     Double energyLimit = efficiency * power80 * (end-start).TotalMinutes / 60;    
