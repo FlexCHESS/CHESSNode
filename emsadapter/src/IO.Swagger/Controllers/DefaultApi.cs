@@ -448,15 +448,15 @@ namespace IO.Swagger.Controllers
                                                     {
                                                         Console.WriteLine("Available capacity greater than limit "  + energyLimit);
                                                         currentStatus.capacityMax = energyLimit;
-                                                        targetCapacity -= (energyLimit - thisCapacity);
-                                                        currentStatus.probability =  thisCapacity/(energyLimit+thisCapacity);
+                                                        //targetCapacity -= (energyLimit - thisCapacity);
+                                                        currentStatus.probability =  1 - thisCapacity/(energyLimit+thisCapacity);
     
                                                     } else
                                                     {
                                                         Console.WriteLine("Available capacity less than limit "  + energyLimit);
-                                                        currentStatus.probability =  thisCapacity / (thisCapacity+availableCapacity);
+                                                        currentStatus.probability = 1 - thisCapacity / (thisCapacity+availableCapacity);
                                                         currentStatus.capacityMax = thisCapacity + availableCapacity;
-                                                        targetCapacity -= availableCapacity;
+                                                        //targetCapacity -= availableCapacity;
                                                     }
                                                     if (res.IndexOf(currentState) < 0)
                                                         res.Add(currentState);
@@ -468,7 +468,7 @@ namespace IO.Swagger.Controllers
                                 }
                                
                             }
-                            // now calculate the priority levels based on the probability of being in the state
+                            // now calculate the priority levels
                             Int32[] ranks = new Int32[res.Count];
                             for (int i=0; i<res.Count; i++)
                             {
@@ -480,9 +480,9 @@ namespace IO.Swagger.Controllers
                                     Int32 probCount = 1;
                                     foreach (ChessStatus resStatus in resState.status)
                                     {
-                                        if (resStatus.probability > 0)
+                                        if (resStatus.cycleCost > 0) 
                                         {
-                                            totalProb += resStatus.probability;
+                                            totalProb += reStatus.cycleCost; 
                                             probCount ++;
                                         }
                                     }
@@ -897,15 +897,15 @@ namespace IO.Swagger.Controllers
                                                     {
                                                         Console.WriteLine("Available capacity greater than limit "  + energyLimit);
                                                         currentStatus.capacityMax = energyLimit;
-                                                        targetCapacity -= (energyLimit - thisCapacity);
-                                                        currentStatus.probability =  thisCapacity/(energyLimit+thisCapacity);
+                                                        //targetCapacity -= (energyLimit - thisCapacity);
+                                                        currentStatus.probability =  1 - thisCapacity/(energyLimit+thisCapacity);
     
                                                     } else
                                                     {
                                                         Console.WriteLine("Available capacity less than limit "  + energyLimit);
-                                                        currentStatus.probability =  thisCapacity / (thisCapacity+availableCapacity);
+                                                        currentStatus.probability =  1 - thisCapacity / (thisCapacity+availableCapacity);
                                                         currentStatus.capacityMax = thisCapacity + availableCapacity;
-                                                        targetCapacity -= availableCapacity;
+                                                        //targetCapacity -= availableCapacity;
                                                     }
                                                     currentStatus.cycleCost =  cycleCost( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
                                                     currentStatus.cycleCarbon =  cycleCarbon( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
@@ -922,7 +922,7 @@ namespace IO.Swagger.Controllers
                                 }
                                
                             }
-                            // now calculate the priority levels based on the probability of being in the state
+                            // now calculate the priority levels 
                             Int32[] ranks = new Int32[res.Count];
                             for (int i=0; i<res.Count; i++)
                             {
@@ -934,9 +934,9 @@ namespace IO.Swagger.Controllers
                                     Int32 probCount = 1;
                                     foreach (ChessStatus resStatus in resState.status)
                                     {
-                                        if (resStatus.probability > 0)
+                                        if (resStatus.cycleCost > 0) 
                                         {
-                                            totalProb += resStatus.probability;
+                                            totalProb += resStatus.cycleCost; 
                                             probCount ++;
                                         }
                                     }
