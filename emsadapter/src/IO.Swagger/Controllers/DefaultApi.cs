@@ -482,7 +482,7 @@ namespace IO.Swagger.Controllers
                                     {
                                         if (resStatus.cycleCost > 0) 
                                         {
-                                            totalProb += reStatus.cycleCost; 
+                                            totalProb += resStatus.cycleCost; 
                                             probCount ++;
                                         }
                                     }
@@ -1062,3 +1062,4 @@ namespace IO.Swagger.Controllers
         }
     }
 }
+
