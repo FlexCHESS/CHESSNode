@@ -1225,7 +1225,7 @@ namespace IO.Swagger.Controllers
                                 if ( status.cycleCarbonUnit != null) {
                                     carbonunit = status.cycleCarbonUnit.Substring(0,1);
                                     costunit = status.cycleCostUnit.Substring(0,1);
-                                    if (!costunit.Contains("k")) factor=1;
+                                    if (!costunit.ToLower.Contains("k")) factor=1;
                                 }
                                 
                                 if ( capacityforlevel[status.priority] == 0 || (status.capacityEnd - status.capacityStart) <  capacityforlevel[status.priority])
