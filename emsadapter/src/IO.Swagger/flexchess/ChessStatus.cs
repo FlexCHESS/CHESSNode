@@ -44,6 +44,10 @@ namespace IoT.Services
         public Double cycleCost{ get; set; }      
         [JsonPropertyName("cycleCarbon")]
         public Double cycleCarbon{ get; set; } 
+        [JsonPropertyName("cycleCosUnitt")]
+        public String cycleCostUnit{ get; set; }   
+        [JsonPropertyName("cycleCarbonUnit")]
+        public String cycleCarbonUnit{ get; set; }   
 
         public override bool Equals(object? obj)
         {
@@ -76,3 +80,4 @@ namespace IoT.Services
         }
     }
 }
+
