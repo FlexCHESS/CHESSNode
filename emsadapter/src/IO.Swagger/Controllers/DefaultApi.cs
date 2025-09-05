@@ -477,18 +477,18 @@ namespace IO.Swagger.Controllers
                                 foreach (CHESS resState in res)
                                 {
                                     Double totalProb = 0;
-                                    Int32 probCount = 1;
+                                    Int32 probCount = 0;
                                     foreach (ChessStatus resStatus in resState.status)
                                     {
-                                        if (resStatus.cycleCost > 0) 
-                                        {
+                                      
                                             totalProb += resStatus.cycleCost; 
                                             probCount ++;
-                                        }
+                                        
                                     }
 
                                     // rank based on probability order
-                                    if (totalProb/probCount > maxProb)
+  
+                                    if ( totalProb/probCount >= maxProb)
                                     {
                                         int j=0;
                                         for (j=0; j<i; j++)
@@ -496,7 +496,7 @@ namespace IO.Swagger.Controllers
                                             if (ranks[j] ==  res.IndexOf(resState))
                                              break;
                                         }
-                                        if (j<i)
+                                        if (j==i)
                                         {
                                             maxIndex = res.IndexOf(resState);
                                             maxProb = totalProb/probCount;
@@ -505,7 +505,7 @@ namespace IO.Swagger.Controllers
 
                                 }
                                 ranks[i] = maxIndex;
-                                Console.WriteLine("Rank " + i + " is "  + maxProb);
+                                Console.WriteLine("Rank " + i + " is "  + maxIndex);
                             }
                             Int32 count = 0;
                             Int32 level = 0;
@@ -517,7 +517,7 @@ namespace IO.Swagger.Controllers
                                     resStatus.priority = level;
                                 }
                                 count++; 
-                                if (count >= res.Count/4)
+                                if (count >= 1) //res.Count/4)
                                 {
                                     count = 0;
                                     level++;
@@ -931,18 +931,17 @@ namespace IO.Swagger.Controllers
                                 foreach (CHESS resState in res)
                                 {
                                     Double totalProb = 0;
-                                    Int32 probCount = 1;
+                                    Int32 probCount = 0;
                                     foreach (ChessStatus resStatus in resState.status)
                                     {
-                                        if (resStatus.cycleCost > 0) 
-                                        {
+                                    
                                             totalProb += resStatus.cycleCost; 
                                             probCount ++;
-                                        }
+                                        
                                     }
 
                                     // rank based on probability order
-                                    if (totalProb/probCount > maxProb)
+                                    if (totalProb/probCount >= maxProb)
                                     {
                                         int j=0;
                                         for (j=0; j<i; j++)
@@ -950,7 +949,7 @@ namespace IO.Swagger.Controllers
                                             if (ranks[j] ==  res.IndexOf(resState))
                                              break;
                                         }
-                                        if (j<i)
+                                        if (j==i)
                                         {
                                             maxIndex = res.IndexOf(resState);
                                             maxProb = totalProb/probCount;
@@ -959,7 +958,7 @@ namespace IO.Swagger.Controllers
 
                                 }
                                 ranks[i] = maxIndex;
-                                Console.WriteLine("Rank " + i + " is "  + maxProb);
+                                Console.WriteLine("Rank " + i + " is "  + maxIndex);
                             }
                             Int32 count = 0;
                             Int32 level = 0;
@@ -971,7 +970,7 @@ namespace IO.Swagger.Controllers
                                     resStatus.priority = level;
                                 }
                                 count++; 
-                                if (count >= res.Count/4)
+                                if (count >= 1) //res.Count/4)
                                 {
                                     count = 0;
                                     level++;
