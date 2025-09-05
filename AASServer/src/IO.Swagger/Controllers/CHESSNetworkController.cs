@@ -1210,9 +1210,9 @@ namespace IO.Swagger.Controllers
                         Console.WriteLine("EMS request for " + json);
                         String chessstatus =  Post("http://emsadapter.default.svc/current", json, Authorization);
                         CHESSStatus[] css = JsonConvert.DeserializeObject<CHESSStatus[]>(chessstatus);
-                        Double[] costforlevel = new Double[10];
-                        Double[] capacityforlevel  = new Double[10];
-                        Double[] carbonforlevel = new Double[10];
+                        Double[,] costforlevel = new Double[10,2];
+                        Double[,] capacityforlevel  = new Double[10,2];
+                        Double[,] carbonforlevel = new Double[10,2];
                         String costunit = "";
                         String carbonunit = "";
                         Double factor = 1000;
@@ -1225,28 +1225,44 @@ namespace IO.Swagger.Controllers
                                 if ( status.cycleCarbonUnit != null) {
                                     carbonunit = status.cycleCarbonUnit.Substring(0,1);
                                     costunit = status.cycleCostUnit.Substring(0,1);
-                                    if (!costunit.ToLower().Contains("k")) factor=1;
+                                    //if (!costunit.ToLower().Contains("k")) factor=1;
                                 }
                                 
-                                if ( capacityforlevel[status.priority] == 0 || (status.capacityEnd - status.capacityStart) <  capacityforlevel[status.priority])
+                                if ( status.status.ToLower().Contains("discharge"))
                                 {
-                                    capacityforlevel[status.priority] += status.capacityEnd - status.capacityStart;
-                                    costforlevel[status.priority] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
-                                    carbonforlevel[status.priority] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                    capacityforlevel[status.priority,0] += status.capacityEnd - status.capacityStart;
+                                    costforlevel[status.priority,0] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
+                                    carbonforlevel[status.priority,0] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                } else 
+                                {
+                                    capacityforlevel[status.priority,1] += status.capacityEnd - status.capacityStart;
+                                    costforlevel[status.priority,1] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
+                                    carbonforlevel[status.priority,1] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                    
                                 }
                                 
                             }
                         }
-                        String cost = "\"name\":\"cost\", \"unit\":\"" + costunit + "\", \"value\":[";
-                        String carbon = "\"name\":\"carbon\", \"unit\":\"" + carbonunit + "\", \"value\":[";
-                        String capacity = "\"name\":\"capacity\", \"unit\":\"Wh\", \"value\":[";
+                        String costin = "\"name\":\"costin\", \"unit\":\"" + costunit + "\", \"value\":[";
+                        String carbonin = "\"name\":\"carbonin\", \"unit\":\"" + carbonunit + "\", \"value\":[";
+                        String capacityin = "\"name\":\"capacityin\", \"unit\":\"Wh\", \"value\":[";
                         for (int level =0; level<10; level++)
-                            if (capacityforlevel[level] > 0){
-                                cost += costforlevel[level].ToString() + ",";
-                                carbon += carbonforlevel[level].ToString() + ",";
-                                capacity += capacityforlevel[level].ToString() + ",";
+                            if (capacityforlevel[level,1] > 0){
+                                costin += costforlevel[level,1].ToString() + ",";
+                                carbonin += carbonforlevel[level,1].ToString() + ",";
+                                capacityin += capacityforlevel[level,1].ToString() + ",";
                             }
-                        result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"KPI\":[{" + cost.Trim(',') + "]}, {"+ carbon.Trim(',')+"]}, {"+ capacity.Trim(',')+"]}], \"CHESS\":" + chessstatus + "},";
+                        String costout = "\"name\":\"costout\", \"unit\":\"" + costunit + "\", \"value\":[";
+                        String carbonout = "\"name\":\"carbonout\", \"unit\":\"" + carbonunit + "\", \"value\":[";
+                        String capacityout = "\"name\":\"capacityout\", \"unit\":\"Wh\", \"value\":[";
+                        for (int level =0; level<10; level++)
+                            if (capacityforlevel[level,0] > 0){
+                                costout += costforlevel[level,0].ToString() + ",";
+                                carbonout += carbonforlevel[level,0].ToString() + ",";
+                                capacityout += capacityforlevel[level,0].ToString() + ",";
+                            }
+
+                        result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"KPI\":[{" + costin.Trim(',') + "]}, {"+ carbonin.Trim(',')+"]}, {"+ capacityin.Trim(',')+"]}, {" + costout.Trim(',') + "]}, {"+ carbonout.Trim(',')+"]}, {"+ capacityout.Trim(',')+"]}], \"CHESS\":" + chessstatus + "},";
                     }
 
                 // todo - aggregate the input schedules and pass to the optimier
@@ -1257,5 +1273,4 @@ namespace IO.Swagger.Controllers
         }
     }
 }
-
 
