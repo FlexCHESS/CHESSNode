@@ -1106,256 +1106,7 @@ namespace IO.Swagger.Controllers
             List<CHESSStatus> res = new List<CHESSStatus>();
 
 
-            // now get latest status values from AAS server
-
-            string result = Get("http://aasserver.default.svc/status", authToken);
-
-            CHESSStatus[] currentStates = JsonConvert.DeserializeObject<CHESSStatus[]>(result);
-
-            foreach (ChessStatus status in body.status)
-            {       
-
-
-                
-                try {
-                    Int32 startHour = Int32.Parse(status.starttime.Substring(0, 2));
-                    Int32 startMinute = Int32.Parse(status.starttime.Substring(3, 2));
-                    Int32 endHour = Int32.Parse(status.endtime.Substring(0, 2));
-                    Int32 endMinute = Int32.Parse(status.endtime.Substring(3, 2));  
-                    Double targetCapacity = Double.Parse(status.capacity);
-                    TimeSpan start = new TimeSpan(startHour, startMinute, 0); 
-                    TimeSpan end = new TimeSpan(endHour, endMinute, 0);
-                    
-                    // See the current flexibility provision matching this requirement
-                    foreach (CHESSStatus currentState in currentStates)
-                    {
-                        Console.WriteLine("CHESS status " + currentState.id);   
-                        if (body == null || body.location == null || currentState.location == null || currentState.location.ToLower().Equals(body.location.ToLower()))                    
-                        foreach (ChessStatus currentStatus in currentState.status)
-                        {
-                            if (currentStatus.recurrence.ToLower().Contains("daily") || currentStatus.recurrence.Equals(status.recurrence))
-                            {
-                                if (status.status == null || status.status.ToLower().Contains(currentStatus.status.ToLower()))
-                                if (status.service == null || status.service.Equals("all") || status.service.ToLower().Equals(currentStatus.service.ToLower()))
-                                {
-                                    startHour = Int32.Parse(currentStatus.starttime.Substring(0, 2));
-                                    startMinute = Int32.Parse(currentStatus.starttime.Substring(3, 2));
-                                    endHour = Int32.Parse(currentStatus.endtime.Substring(0, 2));
-                                    endMinute = Int32.Parse(currentStatus.endtime.Substring(3, 2));  
-                                    
-                                    Double capacity = Double.Parse(currentStatus.capacity);
-                                    TimeSpan thisStart = new TimeSpan(startHour, startMinute, 0); 
-                                    TimeSpan thisEnd = new TimeSpan(endHour, endMinute, 0);
-
-                                    TimeSpan period = thisEnd-thisStart;
-                                    TimeSpan overlap = new TimeSpan(0,0,0);
-                                    Double capacityStart = 0;
-                                    Double capacityEnd = 0;
-                                    if ((start - thisStart).TotalMinutes >= 0)
-                                    {
-                                        Console.WriteLine("Overlap is " + (start - thisStart).TotalMinutes);
-                                        capacityStart = (Double) ((start-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                        capacityEnd = (Double) ((end-thisStart).TotalMinutes) * capacity / period.TotalMinutes;
-                                    }
-                                    if (capacityStart > capacity) capacityStart = capacity;
-                                    if (capacityEnd > capacity) capacityEnd = capacity;
-                        
-
-                                    Console.WriteLine("Capacity at start is " + capacityStart+ " of total " + capacity);
-                                    Console.WriteLine("Capacity at end is " + capacityEnd+ " of total " + capacity);
-                                    currentStatus.capacityStart = capacityStart;
-                                    currentStatus.capacityEnd = capacityEnd;
-                                }
-                            }
-
-                        }
-                        
-                    }
-                
-                    // Now see what capacity is needed
-                    if (targetCapacity > 0)
-                    {
-
-
-                            Console.WriteLine("Capacity needed for " + status.starttime + "->" + status.endtime + " " + status.status  + " is " + targetCapacity);
-
-                            foreach (CHESSStatus currentState in currentStates)
-                            {
-                                Console.WriteLine("CHESS status " + currentState.id);   
-                                if (body == null || body.location == null || currentState.location == null || currentState.location.ToLower().Equals(body.location.ToLower()))                    
-                                foreach (ChessStatus currentStatus in currentState.status)
-                                {
-                                    if (currentStatus.recurrence.ToLower().Contains("daily") || currentStatus.recurrence.Equals(status.recurrence))
-                                    {
-                                        Console.WriteLine("Checking " + currentState.id);
-                                        if (status.status == null ||status.status.ToLower().Contains(currentStatus.status.ToLower()))
-                                        if (status.service == null || status.service.Equals("all") || status.service.ToLower().Equals(currentStatus.service.ToLower()))
-                                        {
-
-                                            if (status.status.ToLower().Contains("force"))
-                                            {
-
-                                                String url = "http://aasserver.default.svc/api/v3.0/submodels/" + currentState.id + "EnergyEntity/submodel-elements/$value";
-
-                                                Console.WriteLine("Getting energy entity from DT - " + url);
-                                                result = Get(url, authToken);
-                                                Console.WriteLine("Got " + result);
-                                        
-                                                DTData[] dtData = JsonConvert.DeserializeObject<DTData[]>(result);
-                                                Double maxEnergy = 0;
-                                                Double maxPower = 0;
-                                                Double efficiency = 1;
-                                                Double power80 = 0;
-                                                Double minSoC = 10;
-
-                                                if (dtData != null && dtData.Length > 0)
-                                                {
-                                                    maxEnergy = dtLookup(dtData, "maximumAllowedBatteryEnergy");      
-                                                    efficiency = dtLookup(dtData, "energyRoundtripEfficiency") / 100;
-                                                } else
-                                                    Console.WriteLine("Cannot get energy data from DT");
-
-
-                                                url = "http://aasserver.default.svc/api/v3.0/submodels/" + currentState.id + "PowerEntity/submodel-elements/$value";
-
-                                                Console.WriteLine("Getting power entity from DT - " + url);
-                                                result = Get(url, authToken);
-                                                Console.WriteLine("Got " + result);
-                                        
-                                                dtData = JsonConvert.DeserializeObject<DTData[]>(result);
-                                                
-                                                if (dtData != null && dtData.Length > 0)
-                                                {
-                                                    maxPower = dtLookup(dtData, "maximumAllowedBatteryPower");      
-                                                    power80 = dtLookup(dtData, "powerCapabilityAt80Charge");
-                                                    if (power80 == null || power80 == 0) power80 = maxPower;
-
-                                                } else
-                                                    Console.WriteLine("Cannot get power data from DT");
-
-                                               url = "http://aasserver.default.svc/api/v3.0/submodels/" + currentState.id + "StateOfBatteryEntity/submodel-elements/$value";
-
-                                                Console.WriteLine("Getting battery state entity from DT - " + url);
-                                                result = Get(url, authToken);
-                                                Console.WriteLine("Got " + result);
-                                        
-                                                dtData = JsonConvert.DeserializeObject<DTData[]>(result);
-                                                
-                                                if (dtData != null && dtData.Length > 0)
-                                                {
-                                                    minSoC = dtLookup(dtData, "minSoC");      
-                                                
-
-                                                } else
-                                                    Console.WriteLine("Cannot get battery state data from DT");
-
-
-
-                                                Double thisCapacity = currentStatus.capacityEnd; 
-                                                currentStatus.cycleCost =  cycleCost( thisCapacity/maxEnergy, currentStatus.capacityStart/maxEnergy );
-
-                                                // see if we are energy capacity or power limited 
-                                                if (maxEnergy * efficiency > thisCapacity)
-                                                {
-                                                    Console.WriteLine("Can increase this capacity " + currentState.id);
-                                                    currentStatus.efficiency = efficiency;
-                                                
-                                                    Double availableCapacity = maxEnergy * (1 - minSoC/100) * efficiency - thisCapacity;
-                                                    Double energyLimit = efficiency * power80 * (end-start).TotalMinutes / 60;    
-                                                    if (availableCapacity > energyLimit) 
-                                                    {
-                                                        Console.WriteLine("Available capacity greater than limit "  + energyLimit);
-                                                        currentStatus.capacityMax = energyLimit;
-                                                        targetCapacity -= (energyLimit - thisCapacity);
-                                                        currentStatus.probability =  thisCapacity/(energyLimit+thisCapacity);
-                                                        
-                                                    } else
-                                                    {
-                                                        Console.WriteLine("Available capacity less than limit "  + energyLimit);
-                                                        currentStatus.probability =  thisCapacity / (thisCapacity+availableCapacity);
-                                                        currentStatus.capacityMax = thisCapacity + availableCapacity;
-                                                        targetCapacity -= availableCapacity;
-                                                    }
-                                                    if (res.IndexOf(currentState) < 0)
-                                                        res.Add(currentState);
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                            }
-                            // now calculate the priority levels based on the probability of being in the state
-                            Int32[] ranks = new Int32[res.Count];
-                            for (int i=0; i<res.Count; i++)
-                            {
-                                Double maxProb = 0;
-                                Int32 maxIndex = 0;
-                                foreach (CHESSStatus resState in res)
-                                {
-                                    Double totalProb = 0;
-                                    Int32 probCount = 1;
-                                    foreach (ChessStatus resStatus in resState.status)
-                                    {
-                                        if (resStatus.probability > 0)
-                                        {
-                                            totalProb += resStatus.probability;
-                                            probCount ++;
-                                        }
-                                    }
-
-                                    // rank based on probability order
-                                    if (totalProb/probCount > maxProb)
-                                    {
-                                        int j=0;
-                                        for (j=0; j<i; j++)
-                                        {
-                                            if (ranks[j] ==  res.IndexOf(resState))
-                                                break;
-                                        }
-                                        if (j<i)
-                                        {
-                                            maxIndex = res.IndexOf(resState);
-                                            maxProb = totalProb/probCount;
-                                        }
-                                    }
-
-                                }
-                                ranks[i] = maxIndex;
-                                Console.WriteLine("Rank " + i + " is "  + maxProb);
-                            }
-                            Int32 count = 0;
-                            Int32 level = 0;
-                            // now assign the priority levels
-                            for (int i=0; i<res.Count; i++)
-                            {
-                                foreach (ChessStatus resStatus in res[ranks[i]].status)
-                                {
-                                    resStatus.priority = level;
-                                }
-                                count++; 
-                                if (count >= res.Count/4)
-                                {
-                                    count = 0;
-                                    level++;
-                                }
-                            
-
-                            }
-
-
-
-                    }
-                    
-
-                } catch (Exception ex)
-                {
-                    Console.WriteLine("Error " + ex.ToString());
-                }      
-        
-                        
-            }
+            // This is a placeholder - the EMS Adapter overrides this API Operation 
             
             res.Add(body);
 
@@ -1457,7 +1208,41 @@ namespace IO.Swagger.Controllers
                     {
                         string json = Newtonsoft.Json.JsonConvert.SerializeObject(optionIn);
                         Console.WriteLine("EMS request for " + json);
-                        result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"CHESS\":" + Post("http://emsadapter.default.svc/current", json, Authorization) + "},";
+                        String chessstatus =  Post("http://emsadapter.default.svc/current", json, Authorization);
+                        CHESSStatus[] css = JsonConvert.DeserializeObject<CHESSStatus[]>(chessstatus);
+                        Double[] costforlevel = new Double[10];
+                        Double[] capacityforlevel  = new Double[10];
+                        Double[] carbonforlevel = new Double[10];
+                        String costunit = "";
+                        String carbonunit = "";
+                        foreach (CHESSStatus cs in css)
+                        {
+                            // see most cost efficient priority levels to choose
+                           
+                            foreach ( IoT.Services.ChessStatus status in cs.status)
+                            if (status.priority < 10)  {
+                                if ( status.cycleCarbonUnit != null) {
+                                    carbonunit = status.cycleCarbonUnit;
+                                    costunit = status.cycleCostUnit;
+                                }
+                                costforlevel[status.priority] += status.cycleCost;
+                                if ( capacityforlevel[status.priority] == 0 || (status.capacityEnd - status.capacityStart) <  capacityforlevel[status.priority])
+                                    capacityforlevel[status.priority] = status.capacityEnd - status.capacityStart;
+                                
+
+                                carbonforlevel[status.priority] += status.cycleCarbon;
+                            }
+                        }
+                        String cost = "\"name\":\"cost\", \"unit\":\"" + costunit + "\", \"value\":[";
+                        String carbon = "\"name\":\"carbon\", \"unit\":\"" + carbonunit + "\", \"value\":[";
+                        String capacity = "\"name\":\"capacity\", \"unit\":\"Wh\", \"value\":[";
+                        for (int level =0; level<10; level++)
+                            if (capacityforlevel[level] > 0){
+                                cost += costforlevel[level].ToString() + ",";
+                                carbon += carbonforlevel[level].ToString() + ",";
+                                capacity += capacityforlevel[level].ToString() + ",";
+                            }
+                        result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"KPI\":[{" + cost.Trim(',') + "]}, {"+ carbon.Trim(',')+"]}, {"+ capacity.Trim(',')+"]}], \"CHESS\":" + chessstatus + "},";
                     }
 
                 // todo - aggregate the input schedules and pass to the optimier
