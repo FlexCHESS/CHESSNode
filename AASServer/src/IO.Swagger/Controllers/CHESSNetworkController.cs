@@ -1215,6 +1215,7 @@ namespace IO.Swagger.Controllers
                         Double[] carbonforlevel = new Double[10];
                         String costunit = "";
                         String carbonunit = "";
+                        Double factor = 1000;
                         foreach (CHESSStatus cs in css)
                         {
                             // see most cost efficient priority levels to choose
@@ -1222,15 +1223,18 @@ namespace IO.Swagger.Controllers
                             foreach ( IoT.Services.ChessStatus status in cs.status)
                             if (status.priority < 10)  {
                                 if ( status.cycleCarbonUnit != null) {
-                                    carbonunit = status.cycleCarbonUnit;
-                                    costunit = status.cycleCostUnit;
+                                    carbonunit = status.cycleCarbonUnit.Substring(0,1);
+                                    costunit = status.cycleCostUnit.Substring(0,1);
+                                    if (!costunit.Contains("k")) factor=1;
                                 }
-                                costforlevel[status.priority] += status.cycleCost;
-                                if ( capacityforlevel[status.priority] == 0 || (status.capacityEnd - status.capacityStart) <  capacityforlevel[status.priority])
-                                    capacityforlevel[status.priority] = status.capacityEnd - status.capacityStart;
                                 
-
-                                carbonforlevel[status.priority] += status.cycleCarbon;
+                                if ( capacityforlevel[status.priority] == 0 || (status.capacityEnd - status.capacityStart) <  capacityforlevel[status.priority])
+                                {
+                                    capacityforlevel[status.priority] += status.capacityEnd - status.capacityStart;
+                                    costforlevel[status.priority] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
+                                    carbonforlevel[status.priority] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                }
+                                
                             }
                         }
                         String cost = "\"name\":\"cost\", \"unit\":\"" + costunit + "\", \"value\":[";
