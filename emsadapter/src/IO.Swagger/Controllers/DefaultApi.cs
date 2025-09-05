@@ -517,7 +517,7 @@ namespace IO.Swagger.Controllers
                                     resStatus.priority = level;
                                 }
                                 count++; 
-                                if (count >= 1) //res.Count/4)
+                                if (count > res.Count/10 )
                                 {
                                     count = 0;
                                     level++;
@@ -970,7 +970,7 @@ namespace IO.Swagger.Controllers
                                     resStatus.priority = level;
                                 }
                                 count++; 
-                                if (count >= 1) //res.Count/4)
+                                if (count > res.Count/10)
                                 {
                                     count = 0;
                                     level++;
