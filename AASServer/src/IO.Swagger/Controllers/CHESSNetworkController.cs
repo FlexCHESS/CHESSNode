@@ -1225,7 +1225,7 @@ namespace IO.Swagger.Controllers
                                 if ( status.cycleCarbonUnit != null) {
                                     carbonunit = status.cycleCarbonUnit.Substring(0,1);
                                     costunit = status.cycleCostUnit.Substring(0,1);
-                                    //if (!costunit.ToLower().Contains("k")) factor=1;
+                                    if (!status.cycleCostUnit.ToLower().Contains("k")) factor=1;
                                 }
                                 
                                 if ( status.status.ToLower().Contains("discharge"))
@@ -1247,20 +1247,20 @@ namespace IO.Swagger.Controllers
                         String carbonin = "\"name\":\"carbonin\", \"unit\":\"" + carbonunit + "\", \"value\":[";
                         String capacityin = "\"name\":\"capacityin\", \"unit\":\"Wh\", \"value\":[";
                         for (int level =0; level<10; level++)
-                            if (capacityforlevel[level,1] > 0){
+                        {
                                 costin += costforlevel[level,1].ToString() + ",";
                                 carbonin += carbonforlevel[level,1].ToString() + ",";
                                 capacityin += capacityforlevel[level,1].ToString() + ",";
-                            }
+                        }
                         String costout = "\"name\":\"costout\", \"unit\":\"" + costunit + "\", \"value\":[";
                         String carbonout = "\"name\":\"carbonout\", \"unit\":\"" + carbonunit + "\", \"value\":[";
                         String capacityout = "\"name\":\"capacityout\", \"unit\":\"Wh\", \"value\":[";
                         for (int level =0; level<10; level++)
-                            if (capacityforlevel[level,0] > 0){
+                         {
                                 costout += costforlevel[level,0].ToString() + ",";
                                 carbonout += carbonforlevel[level,0].ToString() + ",";
                                 capacityout += capacityforlevel[level,0].ToString() + ",";
-                            }
+                         }
 
                         result += "{\"Objective\":\"" + optionIn.objective + "\", \"Option\":\"" + optionIn.option + "\", \"KPI\":[{" + costin.Trim(',') + "]}, {"+ carbonin.Trim(',')+"]}, {"+ capacityin.Trim(',')+"]}, {" + costout.Trim(',') + "]}, {"+ carbonout.Trim(',')+"]}, {"+ capacityout.Trim(',')+"]}], \"CHESS\":" + chessstatus + "},";
                     }
