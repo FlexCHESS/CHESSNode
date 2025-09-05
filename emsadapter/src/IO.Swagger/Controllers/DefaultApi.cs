@@ -472,7 +472,7 @@ namespace IO.Swagger.Controllers
                             Int32[] ranks = new Int32[res.Count];
                             for (int i=0; i<res.Count; i++)
                             {
-                                Double maxProb = 0;
+                                Double maxProb = Double.MaxValue;
                                 Int32 maxIndex = 0;
                                 foreach (CHESS resState in res)
                                 {
@@ -488,7 +488,7 @@ namespace IO.Swagger.Controllers
 
                                     // rank based on probability order
   
-                                    if ( totalProb/probCount >= maxProb)
+                                    if ( totalProb/probCount < maxProb)
                                     {
                                         int j=0;
                                         for (j=0; j<i; j++)
@@ -926,7 +926,7 @@ namespace IO.Swagger.Controllers
                             Int32[] ranks = new Int32[res.Count];
                             for (int i=0; i<res.Count; i++)
                             {
-                                Double maxProb = 0;
+                                Double maxProb = Double.MaxValue;
                                 Int32 maxIndex = 0;
                                 foreach (CHESS resState in res)
                                 {
@@ -941,7 +941,7 @@ namespace IO.Swagger.Controllers
                                     }
 
                                     // rank based on probability order
-                                    if (totalProb/probCount >= maxProb)
+                                    if (totalProb/probCount < maxProb)
                                     {
                                         int j=0;
                                         for (j=0; j<i; j++)
