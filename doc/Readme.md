@@ -11,7 +11,7 @@ The battery does not need to be a traditional electrochemical battery but could 
 
 ![Alt text](virtualbattery.png)
 
-Power limiting or curtailment can be applied to EV charging and other flexible loads by applying liits on the power consumed of produced over network congestion periods.
+Power limiting or curtailment can be applied to EV charging and other flexible loads by applying limits on the power consumed of produced over network congestion periods.
 
 More details can be found in:
 
