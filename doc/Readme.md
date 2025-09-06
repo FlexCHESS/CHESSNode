@@ -18,7 +18,7 @@ Digital Twins
 
 Digital twins are virtual representations of assets which are synchronised, with a certain resolution and fidelity, to the real assets they represent. 
 They can provide information related to the capabilities of the assets to provide flexibility, such as flexible energy capacity and degradation and cost efficiency for use in order to provide flexibility.
-In this manner the play a key role in supporting efficient flexibility provision in hybrid energy storage systems in which different types of assets are possible to utilise in a combined manner.
+In this manner they play a key role in supporting efficient flexibility provision in hybrid energy storage systems in which different types of assets are possible to utilise in a combined manner.
 
 More details can be found in:
 
