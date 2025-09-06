@@ -1,7 +1,7 @@
 Flexibility overview
 ---------------------
 Energy flexibility can be achieved by moving the time of demand or generation as well as restricting or curtailing the power generated or consumed by energy assets / distributed energy resources.
-Time flexibility can be achieved using virtual battery storage or by rescheduling the time of use or demands.
+Time flexibility can be achieved using virtual battery storage or by rescheduling the time of use of demands.
 Power flexibility can be achieved by curtailing the demand or generation of flexibile assets such as EV charging.
 
 ![Alt text](flexibility.png)
