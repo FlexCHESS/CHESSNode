@@ -1216,12 +1216,14 @@ namespace IO.Swagger.Controllers
                         String costunit = "";
                         String carbonunit = "";
                         Double factor = 1000;
+                        
                         foreach (CHESSStatus cs in css)
                         {
                             // see most cost efficient priority levels to choose
                            
                             foreach ( IoT.Services.ChessStatus status in cs.status)
                             if (status.priority < 10)  {
+                                Double currentCapacity = Double.Parse(status.capacity);
                                 if ( status.cycleCarbonUnit != null) {
                                     carbonunit = status.cycleCarbonUnit.Substring(0,1);
                                     costunit = status.cycleCostUnit.Substring(0,1);
@@ -1230,14 +1232,14 @@ namespace IO.Swagger.Controllers
                                 
                                 if ( status.status.ToLower().Contains("discharge"))
                                 {
-                                    capacityforlevel[status.priority,0] += status.capacityEnd - status.capacityStart;
-                                    costforlevel[status.priority,0] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
-                                    carbonforlevel[status.priority,0] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                    capacityforlevel[status.priority,0] += status.capacityMax - currentCapacity;
+                                    costforlevel[status.priority,0] += status.cycleCost * (status.capacityMax - currentCapacity) / factor;
+                                    carbonforlevel[status.priority,0] += status.cycleCarbon * (status.capacityMax - currentCapacity) / factor;
                                 } else 
                                 {
-                                    capacityforlevel[status.priority,1] += status.capacityEnd - status.capacityStart;
-                                    costforlevel[status.priority,1] += status.cycleCost * (status.capacityEnd - status.capacityStart) / factor;
-                                    carbonforlevel[status.priority,1] += status.cycleCarbon * (status.capacityEnd - status.capacityStart) / factor;
+                                    capacityforlevel[status.priority,1] += status.capacityMax - currentCapacity;
+                                    costforlevel[status.priority,1] += status.cycleCost * (status.capacityMax - currentCapacity) / factor;
+                                    carbonforlevel[status.priority,1] += status.cycleCarbon * (status.capacityMax - currentCapacity) / factor;
                                     
                                 }
                                 
