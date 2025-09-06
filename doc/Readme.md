@@ -4,12 +4,12 @@ Energy flexibility can be achieved by moving the time of demand or generation as
 Time flexibility can be achieved using virtual battery storage or by rescheduling the time of use or demands.
 Power flexibility can be achieved by curtailing the demand or generation of flexibile assets such as EV charging.
 
-![Alt text](images/flexibility.png
+![Alt text](flexibility.png)
 
 The virtual battery concept permits the time shifting or peak shaving to be achieved by storing and retriving of energy in two different time periods; a charge period and a discharge period.
 The battery does not need to be a traditional electrochemical battery but could be a building or other heat storage medium with heat pumps or HVAC operating, which can store thermal energy. 
 
-![Alt text](images/virtualbattery.png)
+![Alt text](virtualbattery.png)
 
 Power limiting or curtailment can be applied to EV charging and other flexible loads by applying liits on the power consumed of produced over network congestion periods.
 
