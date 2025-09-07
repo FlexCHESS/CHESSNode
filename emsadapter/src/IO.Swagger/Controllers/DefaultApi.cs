@@ -129,8 +129,13 @@ namespace IO.Swagger.Controllers
         {
 
             foreach (DTData data in dtData)
-            if (data.Id.EndsWith(id)) return data.Value;
-
+            if (data.Id.EndsWith(id)) 
+            {
+                    if (data.Symbol.Contains("k"))
+                        return data.Value*1000;
+                    else
+                        return data.Value;
+            }
             return 0;
         }
         
@@ -418,6 +423,8 @@ namespace IO.Swagger.Controllers
             Double pvPower = 0;
             Double lastTotalPower = 0;
                         
+            Console.WriteLine("BESS = " + bess);
+            
             while (true)
             {
                  try {
@@ -491,7 +498,7 @@ namespace IO.Swagger.Controllers
                     if (totalPower != lastTotalPower)
                     {
                            // see if we need to change 
-
+                            Console.WriteLine("Total power " + totalPower + " at " + DateTime.Now);
                             if (totalPower > limit && twinResponse != null)
                             {
 
