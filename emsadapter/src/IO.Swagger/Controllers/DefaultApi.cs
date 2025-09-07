@@ -270,7 +270,7 @@ namespace IO.Swagger.Controllers
 
                         chess.limits = body.status;
                         if (limit > 0)
-                            Task.Run(() => polling(limit, id, bess, Authorization));
+                            Task.Run(() => polling(limit, id, "it-bess-blg1-chess1-sim", Authorization));
                    
                         break;
 
@@ -474,7 +474,7 @@ namespace IO.Swagger.Controllers
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
                     // Get the BESS grid power
-                    url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "telemetry/submodel-elements/" + bess + "gridPower/$value";
+                    url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "telemetry/submodel-elements/sme-" + bess + "gridPower/$value";
 
                     Console.WriteLine("Getting from DT - " + url);
                     result = Get(url, token);
