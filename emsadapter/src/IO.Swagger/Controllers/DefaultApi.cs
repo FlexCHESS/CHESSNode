@@ -270,7 +270,7 @@ namespace IO.Swagger.Controllers
 
                         chess.limits = body.status;
                         if (limit > 0)
-                            Task.Run(() => polling(limit, id, "it-bess-blg1-chess1-sim", Authorization));
+                            Task.Run(() => polling(body, limit, id, "it-bess-blg1-chess1-sim", Authorization));
                    
                         break;
 
@@ -417,7 +417,7 @@ namespace IO.Swagger.Controllers
         /// </summary>
         /// 
 
-        protected void polling(Double limit, String chess, String bess, String token)
+        protected void polling(CHESS body, Double limit, String chess, String bess, String token)
         {
 
             Double pvPower = 0;
@@ -494,6 +494,7 @@ namespace IO.Swagger.Controllers
 
 
                     // Now see if there is a need to curtail
+
                
                     if (totalPower != lastTotalPower)
                     {
@@ -501,15 +502,31 @@ namespace IO.Swagger.Controllers
                             Console.WriteLine("Total power " + totalPower + " at " + DateTime.Now);
                             if (totalPower > limit && twinResponse != null)
                             {
-
+                                    ChessStatus[] cs = body.status;
+                                    Double flexPower = totalPower;
+                                    DateTime now  = DateTime.Now;
+                                    DateTime end = now.Add( new TimeSpan(0,15,0));
                                     // see which DERs to curtail
                                     foreach (ChessPower twin in twinResponse)
                                     {
-                                        if (twin.powerActiveImport > 0)
+                                        if (twin.powerActiveImport > 0 && flexPower>0 && !twin.Id.Contains("all"))
                                         {
-
-                                            // ToDo: curtail for a 15m period
-
+                                            //The index is the EVSE associated with the EVCS (max 9 EVSE per EVCS at present)
+                                            Int32 index = 0;
+                                            // Curtail for a 15m period
+                                            if (twin.Id.EndsWith("measurement"))
+                                                index = Int32.Parse(twin.Id.Substring(twin.Id.IndexOf("measurement") - 2, 1)) -1;
+                                            Console.WriteLine("Index is " + index);
+                                            cs[index].capacity = "0";
+                                            cs[index].starttime = now.ToString("HH:mm");
+                                            cs[index].endtime = end.ToString("HH:mm");
+                                            cs[index].status = "curtail";
+                                            url = "http://aasserver.default.svc/status/"+twin.Id.Substring(0, twin.Id.Length-13);
+                                            Console.WriteLine("Curtailing " + url  + " - " + JsonConvert.SerializeObject(body));
+                                            String response = Post(url, JsonConvert.SerializeObject(body), token);
+                                            Console.WriteLine("Response " + response);
+                                            if (response.Length > 10)
+                                                flexPower -= twin.powerActiveImport;
                                         }   
                                     }
 
