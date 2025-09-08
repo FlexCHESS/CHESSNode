@@ -1232,14 +1232,14 @@ namespace IO.Swagger.Controllers
                                 
                                 if ( status.status.ToLower().Contains("discharge"))
                                 {
-                                    capacityforlevel[status.priority,0] += status.capacityMax - currentCapacity;
-                                    costforlevel[status.priority,0] += status.cycleCost * (status.capacityMax - currentCapacity) / factor;
-                                    carbonforlevel[status.priority,0] += status.cycleCarbon * (status.capacityMax - currentCapacity) / factor;
+                                    capacityforlevel[status.priority,0] += status.capacityEnd;
+                                    costforlevel[status.priority,0] += status.cycleCost * status.capacityEnd  / factor;
+                                    carbonforlevel[status.priority,0] += status.cycleCarbon * status.capacityEnd / factor;
                                 } else 
                                 {
-                                    capacityforlevel[status.priority,1] += status.capacityMax - currentCapacity;
-                                    costforlevel[status.priority,1] += status.cycleCost * (status.capacityMax - currentCapacity) / factor;
-                                    carbonforlevel[status.priority,1] += status.cycleCarbon * (status.capacityMax - currentCapacity) / factor;
+                                    capacityforlevel[status.priority,1] += status.capacityEnd;
+                                    costforlevel[status.priority,1] += status.cycleCost * status.capacityEnd / factor;
+                                    carbonforlevel[status.priority,1] += status.cycleCarbon * status.capacityEnd / factor;
                                     
                                 }
                                 
