@@ -21,7 +21,7 @@ namespace IoT.Services
         [JsonPropertyName("Unit")]
         public String Unit { get; set; }
         [JsonPropertyName("Value")]
-        public Double Value { get; set; }
+        public Double[] Value { get; set; }
      
 
         public override bool Equals(object? obj)
