@@ -127,16 +127,16 @@ namespace IO.Swagger.Controllers
 
         protected Double dtLookup(DTData[] dtData, String id)
         {
-
+            Double rv = 0;
             foreach (DTData data in dtData)
             if (data.Id.EndsWith(id)) 
             {
                     if (data.Symbol.Contains("k"))
-                        return data.Value*1000;
+                        rv += data.Value*1000;
                     else
-                        return data.Value;
+                        rv += data.Value;
             }
-            return 0;
+            return rv;
         }
         
         // check for the activation of a chess status
@@ -465,10 +465,9 @@ namespace IO.Swagger.Controllers
                  
                     if (dtData != null && dtData.Length > 0)
                     {
-                        pvPower = dtLookup(dtData, "MRB_GN_FV_Wsys");      
-                        totalPower += dtLookup(dtData, "MRA_P8_CDZ_Wsys");
-                        totalPower += dtLookup(dtData, "MRC_GN_CDZ_Wsys");
-                        totalPower += dtLookup(dtData, "MRD_GN_CDZ_Wsys");
+                        pvPower = dtLookup(dtData, "FV_Wsys");      
+                        totalPower += dtLookup(dtData, "CDZ_Wsys");
+ 
                         totalPower -= pvPower;
 
                     } else
