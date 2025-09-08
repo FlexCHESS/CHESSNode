@@ -7,8 +7,19 @@ namespace IoT.Services
     using System.Runtime.Serialization;
     using System.Text.Json.Serialization;
 
+
+    public class CHESSStatus
+    {
+        public String identifier { get; set; }
+        public String location { get; set; }
+        public String id { get; set; }
+        public String currentStatus { get; set; }
+        public IoT.Services.ChessStatus[] status { get; set; }
+    }
+    
     public class OptionOut : BasicDigitalTwin, IEquatable<OptionOut>, IEquatable<BasicDigitalTwin>
     {
+        
         public OptionOut()
         {
             Metadata.ModelId = ModelId;
@@ -24,6 +35,8 @@ namespace IoT.Services
         public ChessStatus[] status { get; set; }
         [JsonPropertyName("KPI")]
         public KPI[] kpi { get; set; }
+        [JsonPropertyName("CHESS")]
+        public CHESSStatus[] chess {get; set; }
 
         public override bool Equals(object? obj)
         {
