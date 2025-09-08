@@ -515,7 +515,7 @@ namespace IO.Swagger.Controllers
                                             Int32 index = 0;
                                             // Curtail for a 15m period
                                             if (twin.Id.EndsWith("measurement"))
-                                                index = Int32.Parse(twin.Id.Substring(twin.Id.IndexOf("measurement") - 2, 1)) -1;
+                                                index = Int32.Parse(twin.Id.Substring(twin.Id.IndexOf("measurement") - 1, 1)) -1;
                                             Console.WriteLine("Index is " + index);
                                             cs[index].capacity = "0";
                                             cs[index].starttime = now.ToString("HH:mm");
@@ -937,3 +937,4 @@ namespace IO.Swagger.Controllers
         }
     }
 }
+
