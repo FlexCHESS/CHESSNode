@@ -37,6 +37,8 @@ using System.Net.NetworkInformation;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 
 namespace IO.Swagger.Controllers
@@ -413,7 +415,8 @@ namespace IO.Swagger.Controllers
 
 
         /// <summary>
-        /// Polling loop to update DER curtailment status based on power
+        /// Polling loop to update DER curtailment / VESS status based on total power of assets
+        /// Activate curtailment and VESS discharge state updates accordingly
         /// </summary>
         /// 
 
@@ -424,7 +427,14 @@ namespace IO.Swagger.Controllers
             Double lastTotalPower = 0;
                         
             Console.WriteLine("BESS = " + bess);
-            
+
+            String objective  = "[{\"limits\": [ {\"name\":\"maxpower\", \"unit\":\"W\", \"value\":" + limit +"} ], \"options\": [{ \"Objective\": \"mincost\",  \"Option\": \"option1\", \"Status\": " + JsonConvert.SerializeObject(body.status) + "}]}]";
+            Console.WriteLine("Objective - " + objective);
+            String json = Post("http://aasserver.default.svc/run", objective, token);
+
+            Console.WriteLine("Options - " + json);
+            OptimiserOut[] optimiserOut = JsonConvert.DeserializeObject<OptimiserOut[]>(json);
+
             while (true)
             {
                  try {
@@ -498,12 +508,66 @@ namespace IO.Swagger.Controllers
                
                     if (totalPower != lastTotalPower)
                     {
-                           // see if we need to change 
+                            // See if we need to Curtail EVSE or if VESS discharge is sufficient 
                             Console.WriteLine("Total power " + totalPower + " at " + DateTime.Now);
                             if (totalPower > limit && twinResponse != null)
                             {
+                                Double flexPower = totalPower;
+                                if (optimiserOut != null)
+                                {
+                                    // Check  VESS storage capacity for priority levels 
+                                    Double[] capacityIn = null;
+                                    Double[] capacityOut = null;
+
+                                    foreach (KPI kpi in optimiserOut[0].Options[0].kpi)
+                                    {
+                                        if (kpi.Name.ToLower().Equals("capacityin"))
+                                            capacityIn = kpi.Value;
+                                        else if (kpi.Name.ToLower().Equals("capacityout"))
+                                            capacityOut = kpi.Value;
+                                        
+                                    }
+                                    if (capacityIn == null || capacityOut == null)
+                                    
+                                        Console.WriteLine("No capacity data from optimiser");
+
+                                     else
+                                        for (int level = 0; level < 10; level++)
+                                        {
+                                            
+                                            if (flexPower > 0)
+                                            {
+                                                // activate this priority level
+                                                foreach (CHESSStatus cs in optimiserOut[0].Options[0].chess)
+                                                {
+                                                    String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[{";
+                                                    foreach (ChessStatus csb in cs.status)
+
+                                                        if (getStatus(csb) && csb.status.ToLower().Contains("charge"))
+                                                        {
+
+
+                                                            url = "http://aasserver.default.svc/status/" + cs.id;
+                                                            Console.WriteLine("Discharging - " + url);
+                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            update += JsonConvert.SerializeObject(csb) + "},";
+
+
+                                                        }
+                                                    update = update.Trim(',') + "]}]";
+                                                    Console.WriteLine("Update " + update);  
+                                                    String response = Post(url, update, token);
+                                                    Console.WriteLine("Response " + response);
+                                                }
+                                            }
+                          
+                                            else break;
+                                        }
+
+                                }
+                                if (flexPower > 0)
+                                {
                                     ChessStatus[] cs = body.status;
-                                    Double flexPower = totalPower;
                                     DateTime now  = DateTime.Now;
                                     DateTime end = now.Add( new TimeSpan(0,15,0));
                                     // see which DERs to curtail
@@ -529,7 +593,7 @@ namespace IO.Swagger.Controllers
                                                 flexPower -= twin.powerActiveImport;
                                         }   
                                     }
-
+                                }
 
                             }
 
