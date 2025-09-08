@@ -541,24 +541,39 @@ namespace IO.Swagger.Controllers
                                                 // activate this priority level
                                                 foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
                                                 {
+                                                    url = "";
+                                                    Double dischagePower = 0;
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[{";
                                                     foreach (ChessStatus csb in cs.status)
 
-                                                        if (getStatus(csb) && csb.status.ToLower().Contains("charge"))
+                                                        if (getStatus(csb) && csb.status.ToLower().Contains("discharge"))
                                                         {
 
-
+                                                            TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
                                                             Console.WriteLine("Discharging - " + url);
                                                             csb.capacity = csb.capacityEnd.ToString();
                                                             update += JsonConvert.SerializeObject(csb) + "},";
+                                                            dischagePower = 60 * csb.capacity / duration.TotalMinutes;
 
+                                                        } else if (csb.status.ToLower().Contains("forcecharge"))
+                                                        {
+
+                                                         
+                                                            Console.WriteLine("Charging - " + url);
+                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            update += JsonConvert.SerializeObject(csb) + "},";
 
                                                         }
                                                     update = update.Trim(',') + "]}]";
-                                                    Console.WriteLine("Update " + update);  
-                                                    String response = Post(url, update, token);
-                                                    Console.WriteLine("Response " + response);
+                                                    if (dischagePower > 0) 
+                                                    {
+                                                        Console.WriteLine("Update " + update);  
+                                                        String response = Post(url, update, token);
+                                                        Console.WriteLine("Response " + response);
+                                                        if (response.Length > 10)
+                                                            flexPower -= dischagePower;
+                                                    }
                                                 }
                                             }
                           
