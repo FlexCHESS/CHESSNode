@@ -443,7 +443,8 @@ namespace IO.Swagger.Controllers
                         foreach (ChessPower twin in twinResponse)
                         {
                             Console.WriteLine("Found twin " + twin.Id + " " + twin.powerActiveImport);
-                            totalPower += twin.powerActiveImport;
+                            if (!twin.Id.Contains("_all"))
+                                totalPower += twin.powerActiveImport;
                         }
 
                     } catch (Exception e) { 
@@ -509,7 +510,7 @@ namespace IO.Swagger.Controllers
                                     // see which DERs to curtail
                                     foreach (ChessPower twin in twinResponse)
                                     {
-                                        if (twin.powerActiveImport > 0 && flexPower>0 && !twin.Id.Contains("all"))
+                                        if (twin.powerActiveImport > 0 && flexPower>0 && !twin.Id.Contains("_all"))
                                         {
                                             //The index is the EVSE associated with the EVCS (max 9 EVSE per EVCS at present)
                                             Int32 index = 0;
@@ -937,4 +938,3 @@ namespace IO.Swagger.Controllers
         }
     }
 }
-
