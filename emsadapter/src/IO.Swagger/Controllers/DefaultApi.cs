@@ -554,7 +554,7 @@ namespace IO.Swagger.Controllers
                                                             Console.WriteLine("Discharging - " + url);
                                                             csb.capacity = csb.capacityEnd.ToString();
                                                             update += JsonConvert.SerializeObject(csb) + "},";
-                                                            dischagePower = 60 * csb.capacity / duration.TotalMinutes;
+                                                            dischagePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                         } else if (csb.status.ToLower().Contains("forcecharge"))
                                                         {
