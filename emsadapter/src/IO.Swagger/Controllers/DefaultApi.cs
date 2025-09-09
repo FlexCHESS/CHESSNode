@@ -543,7 +543,7 @@ namespace IO.Swagger.Controllers
                                                 {
                                                     url = "";
                                                     Double dischagePower = 0;
-                                                    String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[{";
+                                                    String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
                                                         if (getStatus(csb) && csb.status.ToLower().Contains("discharge"))
@@ -553,7 +553,7 @@ namespace IO.Swagger.Controllers
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
                                                             Console.WriteLine("Discharging - " + url);
                                                             csb.capacity = csb.capacityEnd.ToString();
-                                                            update += JsonConvert.SerializeObject(csb) + "},";
+                                                            update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischagePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                         } else if (csb.status.ToLower().Contains("forcecharge"))
@@ -562,10 +562,10 @@ namespace IO.Swagger.Controllers
                                                          
                                                             Console.WriteLine("Charging - " + url);
                                                             csb.capacity = csb.capacityEnd.ToString();
-                                                            update += JsonConvert.SerializeObject(csb) + "},";
+                                                            update += JsonConvert.SerializeObject(csb) + ",";
 
                                                         }
-                                                    update = update.Trim(',') + "]}]";
+                                                    update = update.Trim(',') + "]}";
                                                     if (dischagePower > 0) 
                                                     {
                                                         Console.WriteLine("Update " + update);  
