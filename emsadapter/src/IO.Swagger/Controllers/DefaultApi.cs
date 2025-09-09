@@ -546,7 +546,7 @@ namespace IO.Swagger.Controllers
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
-                                                        if (getStatus(csb) && csb.status.ToLower().Contains("discharge"))
+                                                        if (getStatus(csb) && csb.priority == level && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
@@ -556,7 +556,7 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischagePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
-                                                        } else if (csb.status.ToLower().Contains("forcecharge"))
+                                                        } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                          
