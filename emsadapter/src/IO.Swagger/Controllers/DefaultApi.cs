@@ -50,12 +50,25 @@ namespace IO.Swagger.Controllers
     public class DefaultApiController : Controller
     {
 
-
-
+        protected static List<Double> totalPowerTS = new List<Double>();
+        protected static List<Double> bessPowerTS = new List<Double>();
+        protected static List<Double> pvPowerTS = new List<Double>();
+        protected static List<Double> evcsPowerTS = new List<Double>();
+        protected static List<Double> hvacPowerTS = new List<Double>();
         protected static List<CHESS> assets;
 
         protected static String authToken = "";
         private readonly ILogger<DefaultApiController> _logger;
+
+        // The historic data values 
+        public class PowerTimeseries
+        {
+            public Double[] totalPower {get; set;}
+            public Double[] bessPower {get; set;}
+            public Double[] pvPower {get; set;}
+            public Double[] evcsPower {get; set;}
+            public Double[] hvacPower {get; set;}
+        }
 
         // The main CHESS data structure
         public class CHESS
@@ -454,7 +467,7 @@ namespace IO.Swagger.Controllers
                         foreach (ChessPower twin in twinResponse)
                         {
                             Console.WriteLine("Found twin " + twin.Id + " " + twin.powerActiveImport);
-                            if (!twin.Id.Contains("_all"))
+                            if (!twin.Id.Contains("_all")) 
                                 totalPower += twin.powerActiveImport;
                         }
 
@@ -462,6 +475,8 @@ namespace IO.Swagger.Controllers
                         Console.WriteLine("Error getting DER data " + e.ToString()); 
                         
                     }
+
+                    evcsPowerTS.Add(totalPower);
 
                     // Get the building power data through AAS API
                     String url = "http://aasserver.default.svc/api/v3.0/submodels/" + chess + "telemetry/submodel-elements/$value";
@@ -478,7 +493,8 @@ namespace IO.Swagger.Controllers
                     {
                         pvPower = dtLookup(dtData, "FV_Wsys");      
                         totalPower += dtLookup(dtData, "CDZ_Wsys");
- 
+                        hvacPowerTS.Add(dtLookup(dtData, "CDZ_Wsys"));
+                        pvPowerTS.Add(pvPower);
                         totalPower -= pvPower;
 
                     } else
@@ -498,14 +514,14 @@ namespace IO.Swagger.Controllers
                     if (dtData != null && dtData.Length > 0)
                     {
                         totalPower += dtLookup(dtData, "gridPower");      
-                        
+                        bessPowerTS.Add(dtLookup(dtData, "gridPower"));
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
 
                     // Now see if there is a need to curtail
-
+                    totalPowerTS.Add(totalPower);
                
                     if (totalPower != lastTotalPower)
                     {
@@ -536,13 +552,13 @@ namespace IO.Swagger.Controllers
                                         for (int level = 0; level < 10; level++)
                                         {
                                             
-                                            if (flexPower > 0)
+                                            if (flexPower > 0 && capacityOut[level] > 0)
                                             {
                                                 // activate this priority level
                                                 foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
                                                 {
                                                     url = "";
-                                                    Double dischagePower = 0;
+                                                    Double dischargePower = 0;
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
@@ -551,33 +567,32 @@ namespace IO.Swagger.Controllers
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
-                                                            Console.WriteLine("Discharging - " + url);
+                                                            Console.WriteLine("Discharge - " + url);
                                                             csb.capacity = csb.capacityEnd.ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-                                                            dischagePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+                                                            dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                         } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                          
-                                                            Console.WriteLine("Charging - " + url);
+                                                         
                                                             csb.capacity = csb.capacityEnd.ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
                                                         }
                                                     update = update.Trim(',') + "]}";
-                                                    if (dischagePower > 0) 
+                                                    if (dischargePower > 0) 
                                                     {
                                                         Console.WriteLine("Update " + update);  
                                                         String response = Post(url, update, token);
                                                         Console.WriteLine("Response " + response);
                                                         if (response.Length > 10)
-                                                            flexPower -= dischagePower;
+                                                            flexPower -= dischargePower;
                                                     }
                                                 }
                                             }
                           
-                                            else break;
                                         }
 
                                 }
@@ -611,6 +626,79 @@ namespace IO.Swagger.Controllers
                                     }
                                 }
 
+                            } else if (totalPower  < 0 && twinResponse != null)
+                            {
+                                // Here we have a surplass PV power generation - so need to charge the VESS
+
+
+                                Double flexPower = totalPower;
+                                if (optimiserOut != null && optimiserOut.Options != null)
+                                {
+                                    // Check  VESS storage capacity for priority levels 
+                                    Double[] capacityIn = null;
+                                    Double[] capacityOut = null;
+
+                                    foreach (KPI kpi in optimiserOut.Options[0].kpi)
+                                    {
+                                        if (kpi.Name.ToLower().Equals("capacityin"))
+                                            capacityIn = kpi.Value;
+                                        else if (kpi.Name.ToLower().Equals("capacityout"))
+                                            capacityOut = kpi.Value;
+                                        
+                                    }
+                                    if (capacityIn == null || capacityOut == null)
+                                    
+                                        Console.WriteLine("No capacity data from optimiser");
+
+                                     else
+                                        for (int level = 0; level < 10; level++)
+                                        {
+                                            
+                                            if (flexPower > 0 && capacityIn[level] > 0)
+                                            {
+                                                // activate this priority level
+                                                foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
+                                                {
+                                                    url = "";
+                                                    Double chargePower = 0;
+                                                    String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
+                                                    foreach (ChessStatus csb in cs.status)
+
+                                                        if (csb.priority == level && csb.status.ToLower().Contains("discharge"))
+                                                        {
+
+                                                           
+                                                            url = "http://aasserver.default.svc/status/" + cs.id;
+                                                            Console.WriteLine("Charge - " + url);
+                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            update += JsonConvert.SerializeObject(csb) + ",";
+                                                       
+                                                        } else if (getStatus(csb) && csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
+                                                        {
+
+                                                         
+                                                            TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime)); 
+                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            update += JsonConvert.SerializeObject(csb) + ",";
+                                                            chargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+
+                                                        }
+                                                    update = update.Trim(',') + "]}";
+                                                    if (chargePower > 0) 
+                                                    {
+                                                        Console.WriteLine("Update " + update);  
+                                                        String response = Post(url, update, token);
+                                                        Console.WriteLine("Response " + response);
+                                                        if (response.Length > 10)
+                                                            flexPower -= chargePower;
+                                                    }
+                                                }
+                                            }
+                          
+                                            
+                                        }
+
+                                }
                             }
 
 
@@ -1011,6 +1099,55 @@ namespace IO.Swagger.Controllers
             }
           
      
+            return Json(res);
+
+
+        }
+
+        /// <summary>
+        /// Get the power history summary
+        /// </summary>
+        /// <remarks>  </remarks>
+        /// <response code="200">Successfully got history</response>
+        /// <response code="400">Bad request</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet]
+        [Route("/history")]
+        [Produces("application/json")]
+        [ValidateModelState]
+        [SwaggerOperation("historyGet")]
+        [SwaggerResponse(statusCode: 200, type: typeof(PowerTimeseries), description: "Successfully got the history")]
+        public virtual IActionResult currentGet([FromQuery] String reset, [FromHeader] String Authorization)
+        {
+
+            // Update the stored token
+            if (Authorization != null)
+                authToken = Authorization;
+
+
+            if (Authorization == null)
+                return StatusCode(401);
+    
+  
+            PowerTimeseries res = new PowerTimeseries();
+            res.totalPower = totalPowerTS.ToArray();
+            res.evcsPower = evcsPowerTS.ToArray();
+            res.hvacPower = hvacPowerTS.ToArray();
+            res.pvPower = pvPowerTS.ToArray();
+            res.bessPower = bessPowerTS.ToArray();
+
+            if (reset != null)
+            {
+
+                totalPowerTS = new List<Double>();
+                bessPowerTS = new List<Double>();
+                pvPowerTS = new List<Double>();
+                evcsPowerTS = new List<Double>();
+                hvacPowerTS = new List<Double>();
+  
+            }
+
             return Json(res);
 
 
