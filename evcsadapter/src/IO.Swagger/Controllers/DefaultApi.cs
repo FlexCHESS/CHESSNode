@@ -338,7 +338,7 @@ namespace IO.Swagger.Controllers
                             Name = "targetSubjectAttributes"
                         };
                         relId = $"{newtwin.Id}AccessControlPermissions->saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa";
-                        Program.dtClient.CreateOrReplaceRelationship(chess.Id + "AccessControlPermissions", relId, rel);
+                        Program.dtClient.CreateOrReplaceRelationship("it-tle-" + chess.Id + "AccessControlPermissions", relId, rel);
 
                         String[] additionalSAs = Program.subjectAttributes.Split(' ');
 
@@ -541,9 +541,10 @@ namespace IO.Swagger.Controllers
                                 Name = "contains"
                             };
                             relId = $"{eVSEUpdate.Id}->{eVSEUpdate.Id}measurement";
-                            response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("it-tle-" + update.Id + "-" + eVSEUpdate.Id, relId, relationship);
-                            if (response != null) Console.WriteLine("Response - " + response.Value);
-
+                            try {
+                                response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("it-tle-" + update.Id + "-" + eVSEUpdate.Id, relId, relationship);
+                                if (response != null) Console.WriteLine("Response - " + response.Value);
+                            } catch (Exception ex) { Console.WriteLine("No measurements"); }
                         }
 
 
