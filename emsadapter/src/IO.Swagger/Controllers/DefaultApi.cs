@@ -438,6 +438,7 @@ namespace IO.Swagger.Controllers
 
             Double pvPower = 0;
             Double lastTotalPower = 0;
+            int currentLevel = 0;
                         
             Console.WriteLine("BESS = " + bess);
 
@@ -549,11 +550,12 @@ namespace IO.Swagger.Controllers
                                         Console.WriteLine("No capacity data from optimiser");
 
                                      else
-                                        for (int level = 0; level < 10; level++)
+                                        for (int level = currentLevel; level < 10; level++)
                                         {
                                             
                                             if (flexPower > 0 && capacityOut[level] > 0)
                                             {
+                                                currentLevel = level;
                                                 // activate this priority level
                                                 foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
                                                 {
@@ -568,7 +570,7 @@ namespace IO.Swagger.Controllers
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
                                                             Console.WriteLine("Discharge - " + url);
-                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
@@ -577,7 +579,7 @@ namespace IO.Swagger.Controllers
 
                                                          
                                                          
-                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
                                                         }
@@ -670,7 +672,7 @@ namespace IO.Swagger.Controllers
                                                            
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
                                                             Console.WriteLine("Charge - " + url);
-                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                        
                                                         } else if (getStatus(csb) && csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
@@ -678,7 +680,7 @@ namespace IO.Swagger.Controllers
 
                                                          
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime)); 
-                                                            csb.capacity = csb.capacityEnd.ToString();
+                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             chargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
@@ -699,6 +701,12 @@ namespace IO.Swagger.Controllers
                                         }
 
                                 }
+                            } else {
+                                // We are under the capacity limit and no excess generation 
+
+
+
+
                             }
 
 
