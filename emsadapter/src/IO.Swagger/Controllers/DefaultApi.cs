@@ -404,24 +404,24 @@ namespace IO.Swagger.Controllers
             return res;
         }
          
-        // Estimate cycle carbon using empirical  model
+        // Estimate cycle carbon using empirical  model using https://www.sciencedirect.com/science/article/pii/S0959652624011739
         protected Double cycleCarbon(Double SocMax, Double SocMin, String batteryType)
         {
             Console.WriteLine("Soc max " + SocMax + " Soc min " + SocMin + " type " + batteryType);
             Double res = 0;
 
-            Double[] N1  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};     // This is the carbon model which we will estimate
-            Double[] N2  = {10000,9500,9000,8500,8000,7500,7000,6500,6000,5500};     // This is the carbon model which we will estimate
-            Double[] N3  = {10000,9750,9500,9250,9000,8750,8500,8250,8000,7750};     // This is the carbon model which we will estimate
+            Double[] N1  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};     // This is the degradation model which we will estimate
+            Double[] N2  = {10000,9500,9000,8500,8000,7500,7000,6500,6000,5500};     // This is the degradation model which we will estimate
+            Double[] N3  = {10000,9750,9500,9250,9000,8750,8500,8250,8000,7750};     // This is the degradation model which we will estimate
             
             int i = (int)( (SocMax - SocMin) * 10 );
         
             if (batteryType.ToLower().Equals("li-ion"))  
-                res = (9460/28.2) / (2 * N1[i] * (SocMax - SocMin));
+                res = (60000/28.2) / (2 * N1[i] * (SocMax - SocMin));
             else if (batteryType.ToLower().Equals("lfp"))
-                res = (11460/28.2) / (2 * N2[i] * (SocMax - SocMin));
+                res = (28000/28.2) / (2 * N2[i] * (SocMax - SocMin));
             else if (batteryType.ToLower().Equals("lto"))
-                res = (21460/28.2) / (2 * N3[i] * (SocMax - SocMin));
+                res = (40000/28.2) / (2 * N3[i] * (SocMax - SocMin));
             return res;
         }
   
