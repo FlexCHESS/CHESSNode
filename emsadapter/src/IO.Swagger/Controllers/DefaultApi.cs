@@ -417,11 +417,11 @@ namespace IO.Swagger.Controllers
             int i = (int)( (SocMax - SocMin) * 10 );
         
             if (batteryType.ToLower().Equals("li-ion"))  
-                res = (60000/28.2) / (2 * N1[i] * (SocMax - SocMin));
+                res = (60000) / (2 * N1[i] * (SocMax - SocMin));
             else if (batteryType.ToLower().Equals("lfp"))
-                res = (28000/28.2) / (2 * N2[i] * (SocMax - SocMin));
+                res = (28000) / (2 * N2[i] * (SocMax - SocMin));
             else if (batteryType.ToLower().Equals("lto"))
-                res = (40000/28.2) / (2 * N3[i] * (SocMax - SocMin));
+                res = (40000) / (2 * N3[i] * (SocMax - SocMin));
             return res;
         }
   
@@ -1162,3 +1162,4 @@ namespace IO.Swagger.Controllers
         }
     }
 }
+
