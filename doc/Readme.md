@@ -6,12 +6,12 @@ Power flexibility can be achieved by curtailing the demand or generation of flex
 
 ![Alt text](flexibility.png)
 
-The virtual battery concept permits the time shifting or peak shaving to be achieved by storing and retrieving of energy in two different time periods; a charge period and a discharge period.
+The virtual battery (power profile based) concept permits the time shifting or peak shaving to be achieved by storing and retrieving of energy in two different time periods; a charge period and a discharge period.
 The battery does not need to be a traditional electrochemical battery but could be a building or other heat storage medium with heat pumps or HVAC operating, which can store thermal energy. 
 
 ![Alt text](virtualbattery.png)
 
-Power limiting or curtailment can be applied to EV charging and other flexible loads by applying limits on the power consumed of produced over network congestion periods.
+Power limiting or curtailment (power envelope based) can be applied to EV charging and other flexible loads by applying limits on the power consumed of produced over network congestion periods.
 
 Digital Twins
 -------------
