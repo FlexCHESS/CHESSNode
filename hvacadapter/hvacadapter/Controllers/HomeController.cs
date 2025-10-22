@@ -1,17 +1,19 @@
 /*
- * CHESS adapter for simulated HVAC
+ * CHESS adapter for HVAC
  * tim@toshiba-bril.com
  */
 
+using hvacadapter;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using System.Net;
 using Newtonsoft.Json;
 using System;
-using System.Text;
-using System.Net.NetworkInformation;
-using hvacadapter;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace hvacadapter.Controllers
 {
@@ -306,6 +308,11 @@ namespace hvacadapter.Controllers
     {
         public String[] time {get; set;}
         public Double[] temperature_2m {get; set;} 
+        public Double[] diffuse_radiation { get; set; }
+        public Double[] direct_normal_irradiance { get; set; }
+        public Double[] global_tilted_irradiance { get; set; }
+        public Double[] direct_radiation { get; set; }
+
     }
 
     public class Weather
@@ -333,7 +340,11 @@ namespace hvacadapter.Controllers
         protected static List<CHESS> assets;
         protected static String authToken = null;
         private readonly ILogger<HomeController> _logger;
-  
+        private readonly Double alpha = 0.3;
+        private readonly Double beta = 0.0568;
+        private readonly Double ksun = 0.9256;
+        private readonly Double kint = 0.9691;
+        private readonly Double khvac = 1.0772;
         public Double dtLookup(DTData[] dtData, String id)
         {
 
@@ -413,6 +424,42 @@ namespace hvacadapter.Controllers
         }
 
 
+
+        /// <summary>
+        /// Forecast the schedule for the following day
+        /// </summary>
+        /// 
+
+        protected Double[] forecast(Weather weather, Double[] temperature)
+        {
+            Double[] totalPowerConsumed = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            Double[] nextTemperature = temperature;
+            Double[] thisTemperature = temperature;
+            for (int bin = 0; bin < weather.hourly.temperature_2m.Length; bin++)
+            {
+                // go through the day to predict the load profile - the forecast in hourly values for 24 hours
+
+                
+                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 0.25);
+                Double[] hvacPower = { 0, 0, 0 };
+                totalPowerConsumed[bin] = -pvPower;
+                for (int i = 0; i < 3; i++)
+                {
+
+
+                    Double ta = weather.hourly.temperature_2m[bin] + 273;
+                    hvacPower[i] = (thisTemperature[i] - (1 - 0.001 * alpha) * nextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);
+                    thisTemperature[i] = nextTemperature[i];
+                    nextTemperature[i] = ((1 - 0.001 * alpha) * thisTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i]));
+
+                    Console.WriteLine("Time " + bin + " HVAC power " + i + " = " + hvacPower[i]);
+                    totalPowerConsumed[bin] += hvacPower[i];
+                }
+            }
+            return totalPowerConsumed;
+
+        }
+
         /// <summary>
         /// Polling loop to update  CHESS DT  - It is not necessary if this is done in the MQTT telemetry handler (TBC) 
         /// </summary>
@@ -438,11 +485,7 @@ namespace hvacadapter.Controllers
             Double[] lastTemperature = {293, 293, 293};    
             Double[] lastNextTemperature = {293, 293, 293};    
             Double ta = 0;        
-            Double alpha = 0.3;
-            Double beta = 0.0568;
-            Double ksun = 0.9256;
-            Double kint = 0.9691;
-            Double khvac = 1.0772;
+
      
             while (true)
             {
@@ -477,11 +520,12 @@ namespace hvacadapter.Controllers
 
                     string[] location = chess.location.Split(' ');
 
-                    result = Get("https://api.open-meteo.com/v1/forecast?latitude=" + location[0] + "&longitude=" + location[1] +"&hourly=temperature_2m&current=temperature_2m&forecast_days=1", "none");                  
+                    result = Get("https://api.open-meteo.com/v1/forecast?latitude=" + location[0] + "&longitude=" + location[1] + "&hourly=temperature_2m,diffuse_radiation,direct_normal_irradiance,global_tilted_irradiance,direct_radiation&tilt=20&azimuth=30&current=temperature_2m&forecast_days=1", "none");                  
 
                     Console.WriteLine ("Got " + result);
                     Weather weather = JsonConvert.DeserializeObject<Weather>(result);
 
+              
                     // Use the current temperature 
                     if (weather != null)
                         ta = weather.current.temperature_2m + 273;
@@ -491,8 +535,88 @@ namespace hvacadapter.Controllers
                     for (int i=0; i<3; i++)
                         temperature[i] = (1-0.001*alpha) * lastTemperature[i] + 0.001*(alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i] );
 
+                    
+
                
                     TimeSpan now = DateTime.Now.TimeOfDay;
+                    if (now.Hours == 0 && now.Minutes == 0)
+                    {
+                        // At midnight we forecast the next day
+
+                        Double[] totalPower = forecast(weather, temperature);
+                        int startBin = -1;
+                        
+                        List<Status> activeStatus = new List<Status>();
+
+                        // check what flexibility is required
+                        for (int bin = 0; bin < totalPower.Length; bin++)
+                        {
+                            Console.WriteLine("Forecast bin " + bin + " power " + totalPower[bin]);
+                            if (totalPower[bin] > powerLimit)
+                            {
+                                // need to shed load
+                                Console.WriteLine("Need to reduce power at hour " + bin);
+                                if (startBin < 0)
+                                    startBin = bin;
+
+                            }
+                            else if (totalPower[bin] < powerLimit && totalPower[bin] > 0)
+                            {
+                                // can increase load
+                                Console.WriteLine("Can accept power at hour " + bin);
+                                if (startBin >= 0 && totalPower[startBin] >= 0)
+                                {
+
+                                    Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
+                                    Status status = new Status();
+                                    status.status = "ForceDischarge";
+                                    status.starttime = startBin.ToString("D2") + ":00";
+                                    status.endtime = bin.ToString("D2") + ":00";
+                                    status.capacity = (totalPower[bin] - powerLimit).ToString();
+                                    status.recurrence = "daily";
+                                    activeStatus.Add(status);
+                                    startBin = -1;
+                                }
+                                if (startBin >= 0 && totalPower[startBin] < 0)
+                                {
+
+                                    Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
+                                    Status status = new Status();
+                                    status.status = "ForceCharge";
+                                    status.starttime = startBin.ToString("D2") + ":00";
+                                    status.endtime = bin.ToString("D2") + ":00";
+                                    status.capacity = totalPower[bin].ToString();
+                                    status.recurrence = "daily";
+                                    activeStatus.Add(status);
+                                    startBin = -1;
+                                }
+
+                            }
+                            else if (totalPower[bin] < 0)
+                            {
+                                Console.WriteLine("Can increase power at hour " + bin);
+                                if (startBin < 0)
+                                    startBin = bin;
+                            }
+                           
+                        }
+
+                        // we can invoke the status API to update the EMS adapter with the new flexibility schedule
+
+                        if (activeStatus.Count > 0)
+                        {
+                            chess.status = activeStatus.ToArray();
+                            url = Program.urlprefix + "http://emsadapter.default.svc/status/"+chess.id.Replace("-sim","")+"?limit="+powerLimit;
+                            String json = JsonConvert.SerializeObject(chess);
+                            Console.WriteLine("Updating CHESS flexibility status - " + url + " - " + json);
+                            result = Post(url, json, authToken);
+                            Console.WriteLine(result);
+
+                           
+                        }
+
+                    }
+
                     List<Double> nextTemperature = new List<Double>();
                     List<Double> endTemperature = new List<Double>();
                     if (chess.status != null)
