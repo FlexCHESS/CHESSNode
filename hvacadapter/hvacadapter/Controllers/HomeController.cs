@@ -1,5 +1,5 @@
 /*
- * CHESS adapter for HVAC
+ * CHESS adapter for Simulated HVAC
  * tim@toshiba-bril.com
  */
 
@@ -340,7 +340,7 @@ namespace hvacadapter.Controllers
         protected static List<CHESS> assets;
         protected static String authToken = null;
         private readonly ILogger<HomeController> _logger;
-        private readonly Double alpha = 0.3;
+        private readonly Double alpha = 0.9;
         private readonly Double beta = 0.0568;
         private readonly Double ksun = 0.9256;
         private readonly Double kint = 0.9691;
@@ -440,7 +440,7 @@ namespace hvacadapter.Controllers
                 // go through the day to predict the load profile - the forecast in hourly values for 24 hours
 
                 
-                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 0.25);
+                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 250);
                 Double[] hvacPower = { 0, 0, 0 };
                 totalPowerConsumed[bin] = -pvPower;
                 for (int i = 0; i < 3; i++)
@@ -453,7 +453,7 @@ namespace hvacadapter.Controllers
                     nextTemperature[i] = ((1 - 0.001 * alpha) * thisTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i]));
 
                     Console.WriteLine("Time " + bin + " HVAC power " + i + " = " + hvacPower[i]);
-                    totalPowerConsumed[bin] += hvacPower[i];
+                    totalPowerConsumed[bin] += 1000*hvacPower[i];
                 }
             }
             return totalPowerConsumed;
@@ -560,24 +560,28 @@ namespace hvacadapter.Controllers
                                     startBin = bin;
 
                             }
-                            else if (totalPower[bin] < powerLimit && totalPower[bin] > 0)
+                            else if (totalPower[bin] < powerLimit)
                             {
+                                Double totalEnergy = 0;
+                                for (int i=startBin; i<=bin; i++)
+                                        totalEnergy += totalPower[i];
                                 // can increase load
                                 Console.WriteLine("Can accept power at hour " + bin);
-                                if (startBin >= 0 && totalPower[startBin] >= 0)
+                                if (startBin >= 0 && totalEnergy >= 0)
                                 {
-
+                                    
+                                    
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
                                     Status status = new Status();
                                     status.status = "ForceDischarge";
                                     status.starttime = startBin.ToString("D2") + ":00";
                                     status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = (totalPower[bin] - powerLimit).ToString();
+                                    status.capacity = (totalEnergy - powerLimit).ToString();
                                     status.recurrence = "daily";
                                     activeStatus.Add(status);
                                     startBin = -1;
                                 }
-                                if (startBin >= 0 && totalPower[startBin] < 0)
+                                if (startBin >= 0 && totalEnergy < 0)
                                 {
 
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
@@ -585,7 +589,7 @@ namespace hvacadapter.Controllers
                                     status.status = "ForceCharge";
                                     status.starttime = startBin.ToString("D2") + ":00";
                                     status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = totalPower[bin].ToString();
+                                    status.capacity = (-totalEnergy).ToString();
                                     status.recurrence = "daily";
                                     activeStatus.Add(status);
                                     startBin = -1;
