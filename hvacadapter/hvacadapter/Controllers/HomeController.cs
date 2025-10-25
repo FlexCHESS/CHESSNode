@@ -562,12 +562,12 @@ namespace hvacadapter.Controllers
                             }
                             else if (totalPower[bin] < powerLimit)
                             {
-                                Double totalEnergy = 0;
+                                Double total = 0;
                                 for (int i=startBin; i<=bin; i++)
-                                        totalEnergy += totalPower[i];
+                                        total += totalPower[i];
                                 // can increase load
                                 Console.WriteLine("Can accept power at hour " + bin);
-                                if (startBin >= 0 && totalEnergy >= 0)
+                                if (startBin >= 0 && total >= 0)
                                 {
                                     
                                     
@@ -576,12 +576,12 @@ namespace hvacadapter.Controllers
                                     status.status = "ForceDischarge";
                                     status.starttime = startBin.ToString("D2") + ":00";
                                     status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = (totalEnergy - powerLimit).ToString();
+                                    status.capacity = (total - powerLimit*(bin-startBin)).ToString();
                                     status.recurrence = "daily";
                                     activeStatus.Add(status);
                                     startBin = -1;
                                 }
-                                if (startBin >= 0 && totalEnergy < 0)
+                                if (startBin >= 0 && total < 0)
                                 {
 
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
@@ -589,7 +589,7 @@ namespace hvacadapter.Controllers
                                     status.status = "ForceCharge";
                                     status.starttime = startBin.ToString("D2") + ":00";
                                     status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = (-totalEnergy).ToString();
+                                    status.capacity = (-total).ToString();
                                     status.recurrence = "daily";
                                     activeStatus.Add(status);
                                     startBin = -1;
