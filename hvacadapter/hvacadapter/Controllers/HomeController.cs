@@ -560,14 +560,14 @@ namespace hvacadapter.Controllers
                                     startBin = bin;
 
                             }
-                            else if (totalPower[bin] < powerLimit)
+                            else if (startBin >= 0)
                             {
                                 Double total = 0;
                                 for (int i=startBin; i<=bin; i++)
                                         total += totalPower[i];
                                 // can increase load
                                 Console.WriteLine("Can accept power at hour " + bin);
-                                if (startBin >= 0 && total >= 0)
+                                if (total >= 0)
                                 {
                                     
                                     
@@ -581,7 +581,7 @@ namespace hvacadapter.Controllers
                                     activeStatus.Add(status);
                                     startBin = -1;
                                 }
-                                if (startBin >= 0 && total < 0)
+                                if (total < 0)
                                 {
 
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
