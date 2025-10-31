@@ -560,6 +560,12 @@ namespace hvacadapter.Controllers
                                     startBin = bin;
 
                             }
+                            else if (totalPower[bin] < 0)
+                            {
+                                Console.WriteLine("Can increase power at hour " + bin);
+                                if (startBin < 0)
+                                    startBin = bin;
+                            }
                             else if (startBin >= 0)
                             {
                                 Double total = 0;
@@ -567,7 +573,7 @@ namespace hvacadapter.Controllers
                                         total += totalPower[i];
                                 // can increase load
                                 Console.WriteLine("Can accept power at hour " + bin);
-                                if (total >= 0)
+                                if (totalPower[bin] < powerLimit)
                                 {
                                     
                                     
@@ -581,7 +587,7 @@ namespace hvacadapter.Controllers
                                     activeStatus.Add(status);
                                     startBin = -1;
                                 }
-                                if (total < 0)
+                                if (totalPower[bin] > 0)
                                 {
 
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
@@ -596,12 +602,7 @@ namespace hvacadapter.Controllers
                                 }
 
                             }
-                            else if (totalPower[bin] < 0)
-                            {
-                                Console.WriteLine("Can increase power at hour " + bin);
-                                if (startBin < 0)
-                                    startBin = bin;
-                            }
+                            
                            
                         }
 
