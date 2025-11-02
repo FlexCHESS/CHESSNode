@@ -440,7 +440,7 @@ namespace hvacadapter.Controllers
                 // go through the day to predict the load profile - the forecast in hourly values for 24 hours
 
                 
-                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 250);
+                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 350);
                 Double[] hvacPower = { 0, 0, 0 };
                 totalPowerConsumed[bin] = -pvPower;
                 for (int i = 0; i < 3; i++)
@@ -573,7 +573,7 @@ namespace hvacadapter.Controllers
                                         total += totalPower[i];
                                 // can increase load
                                 Console.WriteLine("Can accept power at hour " + bin);
-                                if (totalPower[bin] < powerLimit)
+                                if (totalPower[bin] < powerLimit && total > 0)
                                 {
                                     
                                     
@@ -587,7 +587,7 @@ namespace hvacadapter.Controllers
                                     activeStatus.Add(status);
                                     startBin = -1;
                                 }
-                                if (totalPower[bin] > 0)
+                                else if (totalPower[bin] > 0 && total < 0)
                                 {
 
                                     Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
