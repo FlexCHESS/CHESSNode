@@ -1036,13 +1036,12 @@ namespace IO.Swagger.Controllers
                                                
                                                     Double availableCapacity = maxEnergy * (1-minSoC/100) * efficiency - thisCapacity;
                                                     Double energyLimit = efficiency * power20 * (end-start).TotalMinutes / 60;    
-                                                  
-                                                    //if (availableCapacity < thisCapacity) availableCapacity = thisCapacity;
+                                                 
                                                     if (availableCapacity > energyLimit) 
                                                     {
                                                         Console.WriteLine("Available capacity greater than limit "  + energyLimit);
                                                         currentStatus.capacityMax = energyLimit;
-                                                        //targetCapacity -= (energyLimit - thisCapacity);
+                                                      
                                                         currentStatus.probability =  1 - thisCapacity/(energyLimit+thisCapacity);
     
                                                     } else
@@ -1050,11 +1049,11 @@ namespace IO.Swagger.Controllers
                                                         Console.WriteLine("Available capacity less than limit "  + energyLimit);
                                                         currentStatus.probability =  1 - thisCapacity / (thisCapacity+availableCapacity);
                                                         currentStatus.capacityMax = thisCapacity + availableCapacity;
-                                                        //targetCapacity -= availableCapacity;
+                                                    
                                                     }
                                   ;
-                                                    currentStatus.cycleCost =  cycleCost( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
-                                                    currentStatus.cycleCarbon =  cycleCarbon( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
+                                                    currentStatus.cycleCost =  cycleCost( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType );
+                                                    currentStatus.cycleCarbon =  cycleCarbon( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType );
                                                     currentStatus.cycleCostUnit = "€/kWh";
                                                     currentStatus.cycleCarbonUnit = "g/kWh";
 
