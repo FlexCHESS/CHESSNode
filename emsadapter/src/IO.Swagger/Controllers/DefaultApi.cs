@@ -437,6 +437,8 @@ namespace IO.Swagger.Controllers
         {
 
             Double pvPower = 0;
+            Double hvacPower = 0;          
+            Double bessPower = 0;
             Double lastTotalPower = 0;
             int currentLevel = 0;
                         
@@ -479,6 +481,7 @@ namespace IO.Swagger.Controllers
 
                     evcsPowerTS.Add(totalPower);
 
+               
                     // Get the building power data through AAS API
                     String url = "http://aasserver.default.svc/api/v3.0/submodels/" + chess + "telemetry/submodel-elements/$value";
 
@@ -488,18 +491,31 @@ namespace IO.Swagger.Controllers
             
                     DTData[] dtData = JsonConvert.DeserializeObject<DTData[]>(result);
                     Console.WriteLine("Data " + dtData.ToString());
-                    
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"evcsPower/invoke/$value";
+
+                    String postjson = "{\"value\":"+totalPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
                  
                     if (dtData != null && dtData.Length > 0)
                     {
                         pvPower = dtLookup(dtData, "FV_Wsys");      
-                        totalPower += dtLookup(dtData, "CDZ_Wsys");
-                        hvacPowerTS.Add(dtLookup(dtData, "CDZ_Wsys"));
+                        
+                        hvacPower = dtLookup(dtData, "CDZ_Wsys");
+                        totalPower += hvacPower;
+                        hvacPowerTS.Add(hvacPower);
                         pvPowerTS.Add(pvPower);
                         totalPower -= pvPower;
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
+
 
                     // Get the BESS grid power
                     url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "telemetry/submodel-elements/sme-" + bess + "gridPower/$value";
@@ -514,16 +530,59 @@ namespace IO.Swagger.Controllers
                  
                     if (dtData != null && dtData.Length > 0)
                     {
-                        totalPower += dtLookup(dtData, "gridPower");      
-                        bessPowerTS.Add(dtLookup(dtData, "gridPower"));
+                        bessPower = dtLookup(dtData, "gridPower");
+                        totalPower +=  bessPower;     
+                        bessPowerTS.Add(bessPower);
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
 
-                    // Now see if there is a need to curtail
+                    // Now update the digital twin data via AAS server
                     totalPowerTS.Add(totalPower);
-               
+
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"totalPower/invoke/$value";
+
+                    postjson = "{\"value\":"+totalPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+                    
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"pvPower/invoke/$value";
+
+                    postjson = "{\"value\":"+pvPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"bessPower/invoke/$value";
+
+                    postjson = "{\"value\":"+bessPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"hvacPower/invoke/$value";
+
+                    postjson = "{\"value\":"+hvacPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    
                     if (totalPower != lastTotalPower)
                     {
                             // See if we need to Curtail EVSE or if VESS discharge is sufficient 
@@ -536,14 +595,25 @@ namespace IO.Swagger.Controllers
                                     // Check  VESS storage capacity for priority levels 
                                     Double[] capacityIn = null;
                                     Double[] capacityOut = null;
-
+                                    Double[] costIn = null;
+                                    Double[] costOut = null;
+                                    Double[] carbonIn = null;
+                                    Double[] carbonOut = null;
                                     foreach (KPI kpi in optimiserOut.Options[0].kpi)
                                     {
                                         if (kpi.Name.ToLower().Equals("capacityin"))
                                             capacityIn = kpi.Value;
                                         else if (kpi.Name.ToLower().Equals("capacityout"))
                                             capacityOut = kpi.Value;
-                                        
+                                        else if (kpi.Name.ToLower().Equals("costin"))
+                                            costIn = kpi.Value;
+                                        else if (kpi.Name.ToLower().Equals("costout"))
+                                            costOut = kpi.Value;
+                                        else if (kpi.Name.ToLower().Equals("carbonin"))
+                                            carbonIn = kpi.Value;
+                                        else if (kpi.Name.ToLower().Equals("carbonout"))
+                                            carbonOut = kpi.Value;
+
                                     }
                                     if (capacityIn == null || capacityOut == null)
                                     
@@ -574,6 +644,18 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
+                                                                                                    
+                                                            url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
+
+                                                            postjson = "{\"value\":"+((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]) + "}";
+
+                                                            Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                                                            result = Post(url, postjson, authToken);
+
+                                                            Console.WriteLine(result);
+                                                            
+
                                                         } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
@@ -582,6 +664,15 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
+                                                            url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
+
+                                                            postjson = "{\"value\":"+(csb.capacityEnd * costOut[level] / capacityIn[level]) + "}";
+
+                                                            Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                                                            result = Post(url, postjson, authToken);
+
+                                                            Console.WriteLine(result);
                                                         }
                                                     update = update.Trim(',') + "]}";
                                                     if (dischargePower > 0) 
@@ -936,7 +1027,7 @@ namespace IO.Swagger.Controllers
 
                                                 // available capacity is max energy less prior committment / use
                                                 Double thisCapacity = currentStatus.capacityEnd; 
-                                                
+                                                if (thisCapacity < 0) thisCapacity = 0;
                                                 // see if we are energy capacity or power limited 
                                                 if (maxEnergy * efficiency > thisCapacity)
                                                 {
@@ -945,6 +1036,8 @@ namespace IO.Swagger.Controllers
                                                
                                                     Double availableCapacity = maxEnergy * (1-minSoC/100) * efficiency - thisCapacity;
                                                     Double energyLimit = efficiency * power20 * (end-start).TotalMinutes / 60;    
+                                                  
+                                                    //if (availableCapacity < thisCapacity) availableCapacity = thisCapacity;
                                                     if (availableCapacity > energyLimit) 
                                                     {
                                                         Console.WriteLine("Available capacity greater than limit "  + energyLimit);
@@ -959,6 +1052,7 @@ namespace IO.Swagger.Controllers
                                                         currentStatus.capacityMax = thisCapacity + availableCapacity;
                                                         //targetCapacity -= availableCapacity;
                                                     }
+                                  ;
                                                     currentStatus.cycleCost =  cycleCost( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
                                                     currentStatus.cycleCarbon =  cycleCarbon( availableCapacity/maxEnergy, thisCapacity/maxEnergy, batteryType );
                                                     currentStatus.cycleCostUnit = "€/kWh";
@@ -1162,4 +1256,3 @@ namespace IO.Swagger.Controllers
         }
     }
 }
-
