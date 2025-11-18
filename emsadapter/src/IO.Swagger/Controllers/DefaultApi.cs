@@ -285,7 +285,7 @@ namespace IO.Swagger.Controllers
 
                         chess.limits = body.status;
                         if (limit > 0)
-                            Task.Run(() => polling(body, limit, id, "it-bess-blg1-chess1-sim", Authorization));
+                            Task.Run(() => polling(body, limit, id, body.identifier, Authorization));
                    
                         break;
 
@@ -440,7 +440,7 @@ namespace IO.Swagger.Controllers
             Double hvacPower = 0;          
             Double bessPower = 0;
             Double lastTotalPower = 0;
-            int currentLevel = 0;
+            int currentLevel = 1;
                         
             Console.WriteLine("BESS = " + bess);
 
@@ -509,13 +509,13 @@ namespace IO.Swagger.Controllers
                         
                         hvacPower = dtLookup(dtData, "CDZ_Wsys");
                         totalPower += hvacPower;
-                        hvacPowerTS.Add(hvacPower);
-                        pvPowerTS.Add(pvPower);
                         totalPower -= pvPower;
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
+                    hvacPowerTS.Add(hvacPower);
+                    pvPowerTS.Add(pvPower);
 
                     // Get the BESS grid power
                     url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "telemetry/submodel-elements/sme-" + bess + "gridPower/$value";
@@ -532,12 +532,12 @@ namespace IO.Swagger.Controllers
                     {
                         bessPower = dtLookup(dtData, "gridPower");
                         totalPower +=  bessPower;     
-                        bessPowerTS.Add(bessPower);
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
-
+                    bessPowerTS.Add(bessPower);
+                    
                     // Now update the digital twin data via AAS server
                     totalPowerTS.Add(totalPower);
 
@@ -620,12 +620,12 @@ namespace IO.Swagger.Controllers
                                         Console.WriteLine("No capacity data from optimiser");
 
                                      else
-                                        for (int level = currentLevel; level < 10; level++)
+                                        for (int level = 0; level < currentLevel; level++)
                                         {
                                             
                                             if (flexPower > 0 && capacityOut[level] > 0)
                                             {
-                                                currentLevel = level;
+                                                
                                                 // activate this priority level
                                                 foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
                                                 {
@@ -666,7 +666,7 @@ namespace IO.Swagger.Controllers
 
                                                             url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
 
-                                                            postjson = "{\"value\":"+(csb.capacityEnd * costOut[level] / capacityIn[level]) + "}";
+                                                            postjson = "{\"value\":"+(csb.capacityEnd * costIn[level] / capacityIn[level]) + "}";
 
                                                             Console.WriteLine("Updating DT - " + url + " - " + postjson);
 
@@ -691,6 +691,7 @@ namespace IO.Swagger.Controllers
                                 }
                                 if (flexPower > 0)
                                 {
+
                                     ChessStatus[] cs = body.status;
                                     DateTime now  = DateTime.Now;
                                     DateTime end = now.Add( new TimeSpan(0,15,0));
@@ -717,12 +718,37 @@ namespace IO.Swagger.Controllers
                                                 flexPower -= twin.powerActiveImport;
                                         }   
                                     }
+
+                                    if (flexPower > 0 && currentLevel<9) currentLevel++;
+                                    else if (currentLevel > 1 && flexPower <= 0) currentLevel--;
+
+                                    Console.WriteLine("Current level " + currentLevel);
+                                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"level/invoke/$value";
+
+                                    postjson = "{\"value\":"+ currentLevel + "}";
+
+                                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                                    result = Post(url, postjson, authToken);
+
+                                    Console.WriteLine(result);
+                                                
                                 }
 
                             } else if (totalPower  < 0 && twinResponse != null)
                             {
                                 // Here we have a surplass PV power generation - so need to charge the VESS
 
+                                currentLevel = 1;
+                                 url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"level/invoke/$value";
+
+                                postjson = "{\"value\":"+ currentLevel + "}";
+
+                                Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                                result = Post(url, postjson, authToken);
+
+                                Console.WriteLine(result);
 
                                 Double flexPower = totalPower;
                                 if (optimiserOut != null && optimiserOut.Options != null)
