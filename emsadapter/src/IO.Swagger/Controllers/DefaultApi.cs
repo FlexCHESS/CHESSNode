@@ -836,16 +836,11 @@ namespace IO.Swagger.Controllers
 
 
                     }
-                    if (totalPower>0)
-                        flexPowerTS.Add(totalPower-limit-flexPower);
-                    else
-                        flexPowerTS.Add(flexPower);
+         
+                    flexPowerTS.Add(flexPower);
                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"flexPower/invoke/$value";
 
-                    if (totalPower>0)
-                        postjson = "{\"value\":"+ (totalPower-limit-flexPower) + "}";
-                    else
-                        postjson = "{\"value\":"+ flexPower + "}";
+                    postjson = "{\"value\":"+ flexPower + "}";
 
                     Console.WriteLine("Updating DT - " + url + " - " + postjson);
 
