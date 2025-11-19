@@ -55,6 +55,8 @@ namespace IO.Swagger.Controllers
         protected static List<Double> pvPowerTS = new List<Double>();
         protected static List<Double> evcsPowerTS = new List<Double>();
         protected static List<Double> hvacPowerTS = new List<Double>();
+        protected static List<Double> flexPowerTS = new List<Double>();
+
         protected static List<CHESS> assets;
 
         protected static String authToken = "";
@@ -68,6 +70,7 @@ namespace IO.Swagger.Controllers
             public Double[] pvPower {get; set;}
             public Double[] evcsPower {get; set;}
             public Double[] hvacPower {get; set;}
+            public Double[] flexPower {get; set;}
         }
 
         // The main CHESS data structure
@@ -582,14 +585,15 @@ namespace IO.Swagger.Controllers
 
                     Console.WriteLine(result);
 
-                    
+                    Double flexPower = 0;
+
                     if (totalPower != lastTotalPower)
                     {
                             // See if we need to Curtail EVSE or if VESS discharge is sufficient 
                             Console.WriteLine("Total power " + totalPower + " at " + DateTime.Now);
                             if (totalPower > limit && twinResponse != null)
                             {
-                                Double flexPower = totalPower;
+                                flexPower = totalPower - limit;
                                 if (optimiserOut != null && optimiserOut.Options != null)
                                 {
                                     // Check  VESS storage capacity for priority levels 
@@ -723,6 +727,7 @@ namespace IO.Swagger.Controllers
                                     else if (currentLevel > 1 && flexPower <= 0) currentLevel--;
 
                                     Console.WriteLine("Current level " + currentLevel);
+
                                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"level/invoke/$value";
 
                                     postjson = "{\"value\":"+ currentLevel + "}";
@@ -732,6 +737,8 @@ namespace IO.Swagger.Controllers
                                     result = Post(url, postjson, authToken);
 
                                     Console.WriteLine(result);
+
+                                  
                                                 
                                 }
 
@@ -750,7 +757,7 @@ namespace IO.Swagger.Controllers
 
                                 Console.WriteLine(result);
 
-                                Double flexPower = totalPower;
+                                flexPower = totalPower;
                                 if (optimiserOut != null && optimiserOut.Options != null)
                                 {
                                     // Check  VESS storage capacity for priority levels 
@@ -818,16 +825,31 @@ namespace IO.Swagger.Controllers
                                         }
 
                                 }
+
                             } else {
-                                // We are under the capacity limit and no excess generation 
-
-
+                                // ToDo: We are under the capacity limit and no excess generation 
 
 
                             }
 
 
                     }
+                    if (flexPower>0)
+                        flexPowerTS.Add(totalPower-limit-flexPower);
+                    else
+                        flexPowerTS.Add(flexPower);
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"flexPower/invoke/$value";
+
+                    if (flexPower>0)
+                        postjson = "{\"value\":"+ (totalPower-limit-flexPower) + "}";
+                    else
+                        postjson = "{\"value\":"+ flexPower + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
                     lastTotalPower = totalPower;
 
                     Thread.Sleep(60000);
@@ -1263,6 +1285,7 @@ namespace IO.Swagger.Controllers
             res.hvacPower = hvacPowerTS.ToArray();
             res.pvPower = pvPowerTS.ToArray();
             res.bessPower = bessPowerTS.ToArray();
+            res.flexPower = flexPowerTS.ToArray();
 
             if (reset != null)
             {
@@ -1272,7 +1295,7 @@ namespace IO.Swagger.Controllers
                 pvPowerTS = new List<Double>();
                 evcsPowerTS = new List<Double>();
                 hvacPowerTS = new List<Double>();
-  
+                flexPowerTS = new List<Double>();
             }
 
             return Json(res);
