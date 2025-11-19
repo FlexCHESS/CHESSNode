@@ -542,53 +542,6 @@ namespace IO.Swagger.Controllers
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
-                    bessPowerTS.Add(bessPower);
-                    
-                    // Now update the digital twin data via AAS server
-                    totalPowerTS.Add(totalPower);
-
-
-                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"totalPower/invoke/$value";
-
-                    postjson = "{\"value\":"+totalPower+"}";
-
-                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
-
-                    result = Post(url, postjson, authToken);
-
-                    Console.WriteLine(result);
-                    
-                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"pvPower/invoke/$value";
-
-                    postjson = "{\"value\":"+pvPower+"}";
-
-                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
-
-                    result = Post(url, postjson, authToken);
-
-                    Console.WriteLine(result);
-
-                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"bessPower/invoke/$value";
-
-                    postjson = "{\"value\":"+bessPower+"}";
-
-                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
-
-                    result = Post(url, postjson, authToken);
-
-                    Console.WriteLine(result);
-
-                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"hvacPower/invoke/$value";
-
-                    postjson = "{\"value\":"+hvacPower+"}";
-
-                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
-
-                    result = Post(url, postjson, authToken);
-
-                    Console.WriteLine(result);
-
- 
                     if (totalPower != lastTotalPower)
                     {
                             // See if we need to Curtail EVSE or if VESS discharge is sufficient 
@@ -640,7 +593,7 @@ namespace IO.Swagger.Controllers
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
-                                                        if (getStatus(csb))
+                                                        
                                                         if (csb.priority == level && csb.status.ToLower().Contains("discharge"))
                                                         {
 
@@ -663,7 +616,7 @@ namespace IO.Swagger.Controllers
                                                             Console.WriteLine(result);
                                                             
 
-                                                        } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
+                                                        } else if (getStatus(csb) && csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                          
@@ -837,8 +790,54 @@ namespace IO.Swagger.Controllers
 
 
                     }
-         
+
+                    bessPowerTS.Add(bessPower);      
                     flexPowerTS.Add(flexPower);
+                    totalPowerTS.Add(totalPower);
+
+                   // Now update the digital twin data via AAS server
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"totalPower/invoke/$value";
+
+                    postjson = "{\"value\":"+totalPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+                    
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"pvPower/invoke/$value";
+
+                    postjson = "{\"value\":"+pvPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"bessPower/invoke/$value";
+
+                    postjson = "{\"value\":"+bessPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"hvacPower/invoke/$value";
+
+                    postjson = "{\"value\":"+hvacPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+         
+
                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"flexPower/invoke/$value";
 
                     postjson = "{\"value\":"+ flexPower + "}";
