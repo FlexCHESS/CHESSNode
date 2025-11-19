@@ -640,7 +640,8 @@ namespace IO.Swagger.Controllers
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
-                                                        if (getStatus(csb) && csb.priority == level && csb.status.ToLower().Contains("discharge"))
+                                                        if (getStatus(csb))
+                                                        if (csb.priority == level && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
