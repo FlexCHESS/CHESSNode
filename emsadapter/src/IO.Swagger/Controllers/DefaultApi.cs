@@ -594,7 +594,7 @@ namespace IO.Swagger.Controllers
                                                     foreach (ChessStatus csb in cs.status)
 
                                                         
-                                                        if (csb.priority == level && csb.status.ToLower().Contains("discharge"))
+                                                        if (getStatus(csb) && csb.priority == level && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
@@ -616,7 +616,7 @@ namespace IO.Swagger.Controllers
                                                             Console.WriteLine(result);
                                                             
 
-                                                        } else if (getStatus(csb) && csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
+                                                        } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                          
@@ -736,7 +736,7 @@ namespace IO.Swagger.Controllers
                                         for (int level = 0; level < 10; level++)
                                         {
                                             
-                                            if (flexPower > 0 && capacityIn[level] > 0)
+                                            if (flexPower < 0 && capacityIn[level] > 0)
                                             {
                                                 // activate this priority level
                                                 foreach (CHESSStatus cs in optimiserOut.Options[0].chess)
@@ -772,7 +772,7 @@ namespace IO.Swagger.Controllers
                                                         String response = Post(url, update, token);
                                                         Console.WriteLine("Response " + response);
                                                         if (response.Length > 10)
-                                                            flexPower -= chargePower;
+                                                            flexPower += chargePower;
                                                     }
                                                 }
                                             }
