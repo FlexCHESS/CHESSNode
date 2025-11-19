@@ -443,6 +443,7 @@ namespace IO.Swagger.Controllers
             Double hvacPower = 0;          
             Double bessPower = 0;
             Double lastTotalPower = 0;
+            Double flexPower = 0;
             int currentLevel = 1;
                         
             Console.WriteLine("BESS = " + bess);
@@ -482,8 +483,7 @@ namespace IO.Swagger.Controllers
                         
                     }
 
-                    evcsPowerTS.Add(totalPower);
-
+ 
                
                     // Get the building power data through AAS API
                     String url = "http://aasserver.default.svc/api/v3.0/submodels/" + chess + "telemetry/submodel-elements/$value";
@@ -495,6 +495,8 @@ namespace IO.Swagger.Controllers
                     DTData[] dtData = JsonConvert.DeserializeObject<DTData[]>(result);
                     Console.WriteLine("Data " + dtData.ToString());
 
+                  
+
                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"evcsPower/invoke/$value";
 
                     String postjson = "{\"value\":"+totalPower+"}";
@@ -505,6 +507,7 @@ namespace IO.Swagger.Controllers
 
                     Console.WriteLine(result);
 
+                    evcsPowerTS.Add(totalPower);
                  
                     if (dtData != null && dtData.Length > 0)
                     {
@@ -585,8 +588,7 @@ namespace IO.Swagger.Controllers
 
                     Console.WriteLine(result);
 
-                    Double flexPower = 0;
-
+ 
                     if (totalPower != lastTotalPower)
                     {
                             // See if we need to Curtail EVSE or if VESS discharge is sufficient 
@@ -834,13 +836,13 @@ namespace IO.Swagger.Controllers
 
 
                     }
-                    if (flexPower>0)
+                    if (totalPower>0)
                         flexPowerTS.Add(totalPower-limit-flexPower);
                     else
                         flexPowerTS.Add(flexPower);
                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"flexPower/invoke/$value";
 
-                    if (flexPower>0)
+                    if (totalPower>0)
                         postjson = "{\"value\":"+ (totalPower-limit-flexPower) + "}";
                     else
                         postjson = "{\"value\":"+ flexPower + "}";
