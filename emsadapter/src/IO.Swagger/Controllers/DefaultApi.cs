@@ -605,13 +605,13 @@ namespace IO.Swagger.Controllers
                                                             dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                                                                     
-                                                            url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
+                                                            String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
 
                                                             postjson = "{\"value\":"+((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]) + "}";
 
-                                                            Console.WriteLine("Updating DT - " + url + " - " + postjson);
+                                                            Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
 
-                                                            result = Post(url, postjson, authToken);
+                                                            result = Post(aasurl, postjson, authToken);
 
                                                             Console.WriteLine(result);
                                                             
@@ -624,13 +624,13 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
-                                                            url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
+                                                            String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
 
                                                             postjson = "{\"value\":"+(csb.capacityEnd * costIn[level] / capacityIn[level]) + "}";
 
-                                                            Console.WriteLine("Updating DT - " + url + " - " + postjson);
+                                                            Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
 
-                                                            result = Post(url, postjson, authToken);
+                                                            result = Post(aasurl, postjson, authToken);
 
                                                             Console.WriteLine(result);
                                                         }
