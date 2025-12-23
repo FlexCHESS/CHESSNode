@@ -445,6 +445,7 @@ namespace IO.Swagger.Controllers
             Double lastTotalPower = 0;
             Double flexPower = 0;
             int currentLevel = 1;
+            Double[,] evcsprob = {{1,0.666666667}, {1,0.416666667}, {0.916666667,0.333333333}, {1,0.416666667},  {1,0.583333333}, {0.916666667,0.25}, {0.916666667,0}, {0.916666667,0.083333333}, {1,0.333333333}, {0.916666667,0.583333333}, {0.916666667,1},  {0.916666667,1},  {0.916666667,0.583333333},  {0.916666667,0.5}, {0.916666667,0.166666667},  {0.916666667,0}, {0.916666667,0}, {0.916666667,0}, {0.916666667,0.25},  {0.916666667,0.333333333},  {0.916666667,0.166666667},  {0.916666667,0.833333333},  {0.916666667,0.583333333},  {0.833333333,0.5}};
                         
             Console.WriteLine("BESS = " + bess);
 
@@ -670,12 +671,15 @@ namespace IO.Swagger.Controllers
                                             cs[index].starttime = now.ToString("HH:mm");
                                             cs[index].endtime = end.ToString("HH:mm");
                                             cs[index].status = "curtail";
+                                            body.identifier = twin.Id.Substring(0, twin.Id.Length-13).Replace("_","-").ToLower();
                                             url = "http://aasserver.default.svc/status/"+twin.Id.Substring(0, twin.Id.Length-13);
                                             Console.WriteLine("Curtailing " + url  + " - " + JsonConvert.SerializeObject(body));
+                                            Console.WriteLine("Probability is " + evcsprob[now.Hour, 0]);
+
                                             String response = Post(url, JsonConvert.SerializeObject(body), token);
                                             Console.WriteLine("Response " + response);
                                             if (response.Length > 10)
-                                                flexPower -= twin.powerActiveImport;
+                                                flexPower -= twin.powerActiveImport * evcsprob[now.Hour, 0];
                                         }   
                                     }
 
