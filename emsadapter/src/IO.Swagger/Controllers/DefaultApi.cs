@@ -438,7 +438,8 @@ namespace IO.Swagger.Controllers
 
         protected void polling(CHESS body, Double limit, String chess, String bess, String token)
         {
-
+            Double totalCostIn = 0;
+            Double totalCostOut = 0;
             Double pvPower = 0;
             Double hvacPower = 0;          
             Double bessPower = 0;
@@ -595,7 +596,7 @@ namespace IO.Swagger.Controllers
                                                     foreach (ChessStatus csb in cs.status)
 
                                                         
-                                                        if (getStatus(csb) && csb.priority == level && csb.status.ToLower().Contains("discharge"))
+                                                        if (getStatus(csb) && csb.priority <= level && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
@@ -607,8 +608,8 @@ namespace IO.Swagger.Controllers
 
                                                                                                     
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
-
-                                                            postjson = "{\"value\":"+((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]) + "}";
+                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
+                                                            postjson = "{\"value\":"+ totalCostOut + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
 
@@ -617,7 +618,7 @@ namespace IO.Swagger.Controllers
                                                             Console.WriteLine(result);
                                                             
 
-                                                        } else if (csb.priority == level  && csb.status.ToLower().Contains("forcecharge"))
+                                                        } else if (csb.priority <= level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                          
@@ -626,8 +627,8 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
-
-                                                            postjson = "{\"value\":"+(csb.capacityEnd * costIn[level] / capacityIn[level]) + "}";
+                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level]);
+                                                            postjson = "{\"value\":"+ totalCostIn + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
 
@@ -674,12 +675,12 @@ namespace IO.Swagger.Controllers
                                             body.identifier = twin.Id.Substring(0, twin.Id.Length-13).Replace("_","-").ToLower();
                                             url = "http://aasserver.default.svc/status/"+twin.Id.Substring(0, twin.Id.Length-13);
                                             Console.WriteLine("Curtailing " + url  + " - " + JsonConvert.SerializeObject(body));
-                                            Console.WriteLine("Probability is " + evcsprob[now.Hour, 0]);
+                                            Console.WriteLine("Probability is " + evcsprob[now.Hour, 1]);
 
                                             String response = Post(url, JsonConvert.SerializeObject(body), token);
                                             Console.WriteLine("Response " + response);
                                             if (response.Length > 10)
-                                                flexPower -= twin.powerActiveImport * evcsprob[now.Hour, 0];
+                                                flexPower -= twin.powerActiveImport * evcsprob[now.Hour, 1];
                                         }   
                                     }
 
