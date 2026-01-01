@@ -608,7 +608,7 @@ namespace IO.Swagger.Controllers
 
                                                                                                     
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
-                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
+                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level])/60;
                                                             postjson = "{\"value\":"+ totalCostOut + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
@@ -627,7 +627,7 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
-                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level]);
+                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level])/60;
                                                             postjson = "{\"value\":"+ totalCostIn + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
