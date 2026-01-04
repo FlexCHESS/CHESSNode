@@ -768,6 +768,7 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             chargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+                                                            totalCostIn -= (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                         }
                                                     update = update.Trim(',') + "]}";
@@ -777,7 +778,20 @@ namespace IO.Swagger.Controllers
                                                         String response = Post(url, update, token);
                                                         Console.WriteLine("Response " + response);
                                                         if (response.Length > 10)
+                                                        {
                                                             flexPower += chargePower;
+
+                                                            String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
+                                                         
+                                                            postjson = "{\"value\":"+ totalCostIn + "}";
+
+                                                            Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
+
+                                                            result = Post(aasurl, postjson, authToken);
+
+                                                            Console.WriteLine(result);
+
+                                                        }
                                                     }
                                                 }
                                             }
