@@ -624,7 +624,7 @@ public class HomeController : Controller
                             if (data.variable.Equals("gridConsumptionPower"))
                                 gridPower = data.value;
                             if (data.variable.Equals("invBatPower_1"))
-                                batPower = data.value;
+                                invPower = data.value;
                         
                         }
                     }
@@ -915,3 +915,4 @@ public class HomeController : Controller
 
     }
 }
+
