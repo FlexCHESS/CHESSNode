@@ -531,7 +531,9 @@ public class HomeController : Controller
                 Double chargeTotal = 0;
                 Double dischargeTotal = 0;
                 Double temperature = 0;
-
+                Double batSoC = 0;
+                Double gridPower = 0;
+                Double invPower = 0;
                 try
                 {
 
@@ -612,25 +614,41 @@ public class HomeController : Controller
                         {
                             MQTT.Publish("N/" + chess.id + data.variable, "{\"unit\": \""+ data.unit + "\", \"name\": \""+data.name+"\", \"value\": "+ data.value.ToString() + "}").Wait();
                             if (data.variable.Equals("chargeEnergyTotal"))
-                                chargeTotal += data.value;
+                                chargeTotal = data.value;
                             if (data.variable.Equals("dischargeEnergyTotal"))
-                                dischargeTotal += data.value;
-                            if (data.variable.Equals("temperature"))
+                                dischargeTotal = data.value;
+                            if (data.variable.Equals("batTemperature_1"))
                                 temperature = data.value;
+                            if (data.variable.Equals("SoC_1"))
+                                batSoC = data.value;
+                            if (data.variable.Equals("gridConsumptionPower"))
+                                gridPower = data.value;
+                            if (data.variable.Equals("invBatPower_1"))
+                                batPower = data.value;
+                        
                         }
                     }
                     if (totalEnergy > 0)
                     {
                         url = Program.urlprefix + "/aas/submodels/" + chess.id + "StateOfBatteryEntity/submodel-elements/sme-" + chess.id + "stateOfCharge/invoke/$value";
 
-                        String update = "{\"value\":" + Math.Round(100 * (chargeTotal - dischargeTotal) / totalEnergy) + "}";
+                        String update = "{\"value\":" + batSoC + "}";
 
                         Console.WriteLine("Updating DT - " + url + " - " + update);
 
                         result = Post(url, update, authToken);
 
                         Console.WriteLine(result);
+  
+                        url = Program.urlprefix + "/aas/submodels/" + chess.id + "PowerEntity/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
 
+                        update = "{\"value\":" + gridPower + "}";
+
+                        Console.WriteLine("Updating DT - " + url + " - " + update);
+
+                        result = Post(url, update, authToken);
+
+                        Console.WriteLine(result);
                         url = Program.urlprefix + "/aas/submodels/" + chess.id + "CDD/submodel-elements/sme-" + chess.id + "temperature/invoke/$value";
 
                         update = "{\"value\":" + temperature + "}";
