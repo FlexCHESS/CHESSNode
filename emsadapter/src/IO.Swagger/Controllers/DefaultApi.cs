@@ -440,6 +440,7 @@ namespace IO.Swagger.Controllers
         {
             Double totalCostIn = 0;
             Double totalCostOut = 0;
+            Double totalCost = 0;
             Double pvPower = 0;
             Double hvacPower = 0;          
             Double bessPower = 0;
@@ -447,7 +448,9 @@ namespace IO.Swagger.Controllers
             Double flexPower = 0;
             int currentLevel = 1;
             Double[,] evcsprob = {{1,0.666666667}, {1,0.416666667}, {0.916666667,0.333333333}, {1,0.416666667},  {1,0.583333333}, {0.916666667,0.25}, {0.916666667,0}, {0.916666667,0.083333333}, {1,0.333333333}, {0.916666667,0.583333333}, {0.916666667,1},  {0.916666667,1},  {0.916666667,0.583333333},  {0.916666667,0.5}, {0.916666667,0.166666667},  {0.916666667,0}, {0.916666667,0}, {0.916666667,0}, {0.916666667,0.25},  {0.916666667,0.333333333},  {0.916666667,0.166666667},  {0.916666667,0.833333333},  {0.916666667,0.583333333},  {0.833333333,0.5}};
-                        
+            Double[] tariff = {0.1203,0.1148,0.1111,0.1088,0.1088,0.1139,0.1269,0.1406,0.1489,0.1397,0.1271,0.1204,0.1117,0.1084,0.1122,0.1181,0.1275,0.1379,0.1502,0.1649,0.1569,0.1432,0.1307,0.1225};
+
+                    
             Console.WriteLine("BESS = " + bess);
 
             String objective  = "[{\"limits\": [ {\"name\":\"maxpower\", \"unit\":\"W\", \"value\":" + limit +"} ], \"options\": [{ \"Objective\": \"mincost\",  \"Option\": \"option1\", \"Status\": " + JsonConvert.SerializeObject(body.status) + "}]}]";
@@ -517,7 +520,7 @@ namespace IO.Swagger.Controllers
                         
                         hvacPower = dtLookup(dtData, "CDZ_Wsys");
                         totalPower += hvacPower;
-                        totalPower -= pvPower;
+                        totalPower += pvPower;
 
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
@@ -608,7 +611,7 @@ namespace IO.Swagger.Controllers
 
                                                                                                     
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
-                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level])/60;
+                                                            totalCostOut = ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
                                                             postjson = "{\"value\":"+ totalCostOut + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
@@ -627,7 +630,7 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
                                                             String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
-                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level])/60;
+                                                            totalCostIn = (csb.capacityEnd * costIn[level] / capacityIn[level]);
                                                             postjson = "{\"value\":"+ totalCostIn + "}";
 
                                                             Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
@@ -768,7 +771,7 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             chargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
-                                                            totalCostIn -= (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+                                                            totalCostIn -= 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
                                                         }
                                                     update = update.Trim(',') + "]}";
@@ -819,6 +822,18 @@ namespace IO.Swagger.Controllers
                     url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"PowerEntity/submodel-elements/sme-"+chess+"totalPower/invoke/$value";
 
                     postjson = "{\"value\":"+totalPower+"}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " + postjson);
+
+                    result = Post(url, postjson, authToken);
+
+                    Console.WriteLine(result);
+
+                    totalCost = totalPower * tariff[DateTime.Now.Hour] / 1000;
+
+                    url = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"totalCost/invoke/$value";
+
+                    postjson = "{\"value\":"+totalCost+"}";
 
                     Console.WriteLine("Updating DT - " + url + " - " + postjson);
 
