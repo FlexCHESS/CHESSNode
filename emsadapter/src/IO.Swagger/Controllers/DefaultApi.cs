@@ -160,13 +160,15 @@ namespace IO.Swagger.Controllers
         // check for the activation of a chess status
         private Boolean getStatus(ChessStatus status)
         {
-            DateTime starttime;
-            DateTime endtime;
+            TimeSpan start = TimeSpan.Parse(status.starttime + ":00"); 
+            TimeSpan end = TimeSpan.Parse(status.endtime + ":00");
+            TimeSpan now = DateTime.Now.TimeOfDay;
 
-            if (status.recurrence.ToLower().Equals("daily") ||
+            if ((start <= now && end > now) && (status.recurrence.ToLower().Equals("daily") ||
                 (status.recurrence.ToLower().Equals("weekdays") && ((DateTime.Today.DayOfWeek != DayOfWeek.Saturday) && (DateTime.Today.DayOfWeek != DayOfWeek.Sunday))) ||
-                (status.recurrence.ToLower().Equals("weekends") && ((DateTime.Today.DayOfWeek == DayOfWeek.Saturday) || (DateTime.Today.DayOfWeek == DayOfWeek.Sunday))))
+                (status.recurrence.ToLower().Equals("weekends") && ((DateTime.Today.DayOfWeek == DayOfWeek.Saturday) || (DateTime.Today.DayOfWeek == DayOfWeek.Sunday)))))
             {
+
 
                 return true;
 
