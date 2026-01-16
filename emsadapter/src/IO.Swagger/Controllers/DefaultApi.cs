@@ -581,6 +581,8 @@ namespace IO.Swagger.Controllers
                                             carbonOut = kpi.Value;
 
                                     }
+                                    totalCostIn = 0;
+                                    totalCostOut = 0;
                                     if (capacityIn == null || capacityOut == null)
                                     
                                         Console.WriteLine("No capacity data from optimiser");
@@ -611,15 +613,9 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
 
+                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
                                                                                                     
-                                                            String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
-                                                            totalCostOut = ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
-                                                            postjson = "{\"value\":"+ totalCostOut + "}";
-
-                                                            Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
-
-                                                            result = Post(aasurl, postjson, authToken);
-
+                   
                                                             Console.WriteLine(result);
                                                             
 
@@ -631,14 +627,8 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
-                                                            String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
-                                                            totalCostIn = (csb.capacityEnd * costIn[level] / capacityIn[level]);
-                                                            postjson = "{\"value\":"+ totalCostIn + "}";
-
-                                                            Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
-
-                                                            result = Post(aasurl, postjson, authToken);
-
+                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level]);
+ 
                                                             Console.WriteLine(result);
                                                         }
                                                     update = update.Trim(',') + "]}";
@@ -654,6 +644,22 @@ namespace IO.Swagger.Controllers
                                             }
                           
                                         }
+
+                                        String aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costOut/invoke/$value";
+                                        postjson = "{\"value\":"+ totalCostOut + "}";
+
+                                        Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
+
+                                        result = Post(aasurl, postjson, authToken);
+
+                                        aasurl = "http://aasserver.default.svc/api/v3.0/aas/submodels/"+chess+"CostEntity/submodel-elements/sme-"+chess+"costIn/invoke/$value";
+                                        postjson = "{\"value\":"+ totalCostIn + "}";
+
+                                        Console.WriteLine("Updating DT - " + aasurl + " - " + postjson);
+
+                                        result = Post(aasurl, postjson, authToken);
+
+
 
                                 }
                                 if (flexPower > 0)
