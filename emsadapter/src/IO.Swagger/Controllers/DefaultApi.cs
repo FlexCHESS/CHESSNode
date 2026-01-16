@@ -611,9 +611,9 @@ namespace IO.Swagger.Controllers
                                                             Console.WriteLine("Discharge - " + url);
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-                                                            dischargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+                                                            dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;
 
-                                                            totalCostOut += ((csb.capacityEnd - csb.capacityStart) * costOut[level] / capacityOut[level]);
+                                                            totalCostOut += csb.capacityEnd * csb.cycleCost / 1000;
                                                                                                     
                    
                                                             Console.WriteLine(result);
@@ -627,7 +627,7 @@ namespace IO.Swagger.Controllers
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
 
-                                                            totalCostIn += (csb.capacityEnd * costIn[level] / capacityIn[level]);
+                                                            totalCostIn += csb.capacityEnd * csb.cycleCost / 1000;
  
                                                             Console.WriteLine(result);
                                                         }
