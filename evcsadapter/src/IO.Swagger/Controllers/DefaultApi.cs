@@ -313,13 +313,13 @@ namespace IO.Swagger.Controllers
                         chess.standard = "REST";
                         chess.location = "CHESS node 2";
                         chess.version = "1.0";
-                        Console.WriteLine("CHESS id " + "it-tle-" + id + " adapter " + adapterid);
-                        IoT.Services.Chess newtwin = Program.dtClient.CreateOrReplaceDigitalTwin("it-tle-" + chess.Id, chess);
+                        Console.WriteLine("CHESS id " + "prefix-" + id + " adapter " + adapterid);
+                        IoT.Services.Chess newtwin = Program.dtClient.CreateOrReplaceDigitalTwin("prefix-" + chess.Id, chess);
 
                         AccessPermissionRule accessPermissionRule = new AccessPermissionRule();
-                        accessPermissionRule.Id = "it-tle-" + chess.Id + "AccessControlPermissions";
+                        accessPermissionRule.Id = "prefix-" + chess.Id + "AccessControlPermissions";
 
-                        Program.dtClient.CreateOrReplaceDigitalTwin("it-tle-" + chess.Id + "AccessControlPermissions", accessPermissionRule);
+                        Program.dtClient.CreateOrReplaceDigitalTwin("prefix-" + chess.Id + "AccessControlPermissions", accessPermissionRule);
 
                         var relationship = new BasicRelationship
                         {
@@ -338,7 +338,7 @@ namespace IO.Swagger.Controllers
                             Name = "targetSubjectAttributes"
                         };
                         relId = $"{newtwin.Id}AccessControlPermissions->saFlexibilityProvidercLtJVPhoOIhL33bZPIMoo9ShquYa";
-                        Program.dtClient.CreateOrReplaceRelationship("it-tle-" + chess.Id + "AccessControlPermissions", relId, rel);
+                        Program.dtClient.CreateOrReplaceRelationship("prefix-" + chess.Id + "AccessControlPermissions", relId, rel);
 
                         String[] additionalSAs = Program.subjectAttributes.Split(' ');
 
@@ -350,14 +350,14 @@ namespace IO.Swagger.Controllers
                                 Name = "targetSubjectAttributes"
                             };
                             relId = $"{newtwin.Id}AccessControlPermissions->{sa}";
-                            Program.dtClient.CreateOrReplaceRelationship("it-tle-" + chess.Id + "AccessControlPermissions", relId, rel);
+                            Program.dtClient.CreateOrReplaceRelationship("prefix-" + chess.Id + "AccessControlPermissions", relId, rel);
                             Console.WriteLine("Created permission relationship successfully - " + sa);
                         }
                         // create the telemetry submodel
 
                         IoT.Services.Submodel submodel = new IoT.Services.Submodel
                         {
-                            Id = "it-tle-" + newtwin.Id + "telemetry",
+                            Id = "prefix-" + newtwin.Id + "telemetry",
 
                             SemanticIdValue = "",
 
@@ -371,7 +371,7 @@ namespace IO.Swagger.Controllers
 
                         Console.WriteLine(JsonConvert.SerializeObject(submodel));
 
-                        Program.dtClient.CreateOrReplaceDigitalTwin("it-tle-" + chess.Id + "telemetry", submodel);
+                        Program.dtClient.CreateOrReplaceDigitalTwin("prefix-" + chess.Id + "telemetry", submodel);
 
                         accessPermissionRule = new AccessPermissionRule
                         {
@@ -407,7 +407,7 @@ namespace IO.Swagger.Controllers
                         {
                             IoT.Services.SubmodelElement submodelElement = new IoT.Services.SubmodelElement();
 
-                            submodelElement.Id = "sme-" + "it-tle-" + update.Id + "-" + eVSEUpdate.Id + "measurement";
+                            submodelElement.Id = "sme-" + "prefix-" + update.Id + "-" + eVSEUpdate.Id + "measurement";
                             submodelElement.Kind = new Kind { };
                             submodelElement.DataSpecificationTemplateGlobalRefValue = "";
                             submodelElement.DisplayName = new LangStringElementType();
@@ -417,11 +417,11 @@ namespace IO.Swagger.Controllers
 
                             Console.WriteLine(JsonConvert.SerializeObject(submodelElement));
 
-                            Program.dtClient.CreateOrReplaceDigitalTwin("sme-" + "it-tle-" + update.Id + "-" + eVSEUpdate.Id + "measurement", submodelElement);
+                            Program.dtClient.CreateOrReplaceDigitalTwin("sme-" + "prefix-" + update.Id + "-" + eVSEUpdate.Id + "measurement", submodelElement);
 
                             var smerel = new SubmodelElementDataSpecificationRelationship
                             {
-                                TargetId = "sme-" + "it-tle-" + update.Id + "-" + eVSEUpdate.Id + "measurement",
+                                TargetId = "sme-" + "prefix-" + update.Id + "-" + eVSEUpdate.Id + "measurement",
                                 Name = "submodelElement"
 
                             };
@@ -451,7 +451,7 @@ namespace IO.Swagger.Controllers
                     // Update the CHESS status digital twin !
                     foreach (EVSEUpdate eVSEUpdate in update.Evse)
                     {
-                        Console.WriteLine("Updating " + "it-tle-" + update.Id + "-" + eVSEUpdate.Id);
+                        Console.WriteLine("Updating " + "prefix-" + update.Id + "-" + eVSEUpdate.Id);
                         Boolean registered = false;
                         int count = 0;
                         asset.status = new ChessStatus[update.Evse.Count];
@@ -462,7 +462,7 @@ namespace IO.Swagger.Controllers
                                 IoT.Services.ChessStatus twin = Program.dtClient.GetDigitalTwin<IoT.Services.ChessStatus>(twinId.Id);
                          
 
-                                if (twin.Id.Equals("it-tle-" + update.Id + "-" + eVSEUpdate.Id))
+                                if (twin.Id.Equals("prefix-" + update.Id + "-" + eVSEUpdate.Id))
                                 {
                                     Console.WriteLine("Got matching twin " + twin.Id);
                                     registered = true;
@@ -470,7 +470,7 @@ namespace IO.Swagger.Controllers
                                     if (!eVSEUpdate.Status.ToString().Equals(twin.status))
                                     {
 
-                                        asset.status[count].Id = "it-tle-" + update.Id+"-"+eVSEUpdate.Id;
+                                        asset.status[count].Id = "prefix-" + update.Id+"-"+eVSEUpdate.Id;
                                         asset.status[count].status = eVSEUpdate.Status.ToString();
                                         asset.status[count].recurrence = "continuous";
 
@@ -495,7 +495,7 @@ namespace IO.Swagger.Controllers
                                 Console.WriteLine("Adding measurement " + measurement.timestamp);
 
                                 if (measurement.timestamp != null)
-                                    Program.dtClient.CreateOrReplaceDigitalTwin("it-tle-"+update.Id+"-"+eVSEUpdate.Id + "measurement", measurement);
+                                    Program.dtClient.CreateOrReplaceDigitalTwin("prefix-"+update.Id+"-"+eVSEUpdate.Id + "measurement", measurement);
                             }
                             catch (Exception ex) { Console.WriteLine("Error adding measurement " + ex.ToString()); }
 
@@ -504,9 +504,9 @@ namespace IO.Swagger.Controllers
                         if (!registered)
                         {
 
-                            Console.WriteLine("Creating EV DT " + "it-tle-" + update.Id + "-" + eVSEUpdate.Id);
+                            Console.WriteLine("Creating EV DT " + "prefix-" + update.Id + "-" + eVSEUpdate.Id);
                             asset.status[count] = new ChessStatus();
-                            asset.status[count].Id = "it-tle-" + update.Id + "-" + eVSEUpdate.Id;
+                            asset.status[count].Id = "prefix-" + update.Id + "-" + eVSEUpdate.Id;
                             if (eVSEUpdate.Status != null)
                                 asset.status[count].status = eVSEUpdate.Status.ToString();
                             else
@@ -522,11 +522,11 @@ namespace IO.Swagger.Controllers
 
                             var relationship = new BasicRelationship
                             {
-                                TargetId = "it-tle-" + update.Id + "-" + eVSEUpdate.Id,
+                                TargetId = "prefix-" + update.Id + "-" + eVSEUpdate.Id,
                                 Name = "contains"
                             };
                             string relId = $"{update.Id}->{asset.status[count].Id}";
-                            Response<BasicRelationship> response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("it-tle-" + update.Id, relId, relationship);
+                            Response<BasicRelationship> response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("prefix-" + update.Id, relId, relationship);
                             if (response != null) Console.WriteLine("Response - " + response.Value);
 
 
@@ -537,12 +537,12 @@ namespace IO.Swagger.Controllers
 
                             relationship = new BasicRelationship
                             {
-                                TargetId = "it-tle-" + update.Id + "-" + eVSEUpdate.Id + "measurement",
+                                TargetId = "prefix-" + update.Id + "-" + eVSEUpdate.Id + "measurement",
                                 Name = "contains"
                             };
                             relId = $"{eVSEUpdate.Id}->{eVSEUpdate.Id}measurement";
                             try {
-                                response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("it-tle-" + update.Id + "-" + eVSEUpdate.Id, relId, relationship);
+                                response = Program.dtClient.CreateOrReplaceRelationship<BasicRelationship>("prefix-" + update.Id + "-" + eVSEUpdate.Id, relId, relationship);
                                 if (response != null) Console.WriteLine("Response - " + response.Value);
                             } catch (Exception ex) { Console.WriteLine("No measurements"); }
                         }
@@ -651,3 +651,4 @@ namespace IO.Swagger.Controllers
         }
     }
 }
+
