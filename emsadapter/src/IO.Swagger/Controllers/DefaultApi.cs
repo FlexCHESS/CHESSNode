@@ -778,8 +778,8 @@ namespace IO.Swagger.Controllers
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime)); 
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-                                                            chargePower = 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
-                                                            totalCostIn -= 60 * (csb.capacityEnd - csb.capacityStart) / duration.TotalMinutes;
+                                                            chargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;
+                                                            totalCostIn -=  csb.cycleCost * csb.capacityEnd / 1000;
 
                                                         }
                                                     update = update.Trim(',') + "]}";
