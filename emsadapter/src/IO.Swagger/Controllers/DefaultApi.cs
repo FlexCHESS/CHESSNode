@@ -626,8 +626,8 @@ namespace IO.Swagger.Controllers
                                                          
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-                                                            dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;     
-                                                            totalCostIn += dischargePower * csb.cycleCost / 1000;
+                                                                
+                                                            totalCostIn += 60 * csb.capacityEnd  * csb.cycleCost / (duration.TotalMinutes * 1000);
  
                                                             Console.WriteLine(result);
                                                         }
