@@ -613,7 +613,7 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;
 
-                                                            totalCostOut += csb.capacityEnd * csb.cycleCost / 1000;
+                                                            totalCostOut += dischargePower * csb.cycleCost / 1000;
                                                                                                     
                    
                                                             Console.WriteLine(result);
@@ -622,12 +622,12 @@ namespace IO.Swagger.Controllers
                                                         } else if (csb.priority <= level  && csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
-                                                         
+                                                            TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                          
                                                             csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-
-                                                            totalCostIn += csb.capacityEnd * csb.cycleCost / 1000;
+                                                            dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;     
+                                                            totalCostIn += dischargePower * csb.cycleCost / 1000;
  
                                                             Console.WriteLine(result);
                                                         }
