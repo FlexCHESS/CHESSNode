@@ -247,6 +247,7 @@ namespace foxBESSadatper.Controllers
         public Int32 minSocOnGrid { get; set; }
         public Int32 fdSoc { get; set; }
         public Int32 fdPwr { get; set; }
+        public Int32 maxSoc { get; set; }
     }
 
     // Set of schedules for a scheduler
@@ -534,19 +535,23 @@ public class HomeController : Controller
                 Double batSoC = 0;
                 Double gridPower = 0;
                 Double invPower = 0;
+                String jsonschedule = "";
+
                 try
                 {
 
                     // check for status changes
                     int count = 0;
-
+                    Scheduler scheduler = new Scheduler();
+                    scheduler.groups = new Schedule[chess.status.Length];
+                    scheduler.deviceSN = chess.deviceData.deviceSN;
+          
                     if (chess.status!=null)
                     foreach (Status status in chess.status)
                     {
                         // see if there are any weekday / weekend changes !
 
-                        Scheduler scheduler = new Scheduler();
-                        scheduler.groups = new Schedule[chess.status.Length];
+
                         if (!status.status.Contains("available") && getStatus(status) && status.active == 0)
                         {
                             Schedule schedule = new Schedule();
@@ -566,23 +571,22 @@ public class HomeController : Controller
                             if (totalEnergy > 0)
                                 schedule.fdSoc = (int)(100 * capacity / totalEnergy);
                             else schedule.fdSoc = 90;
+
+                            if (schedule.workMode.ToLower().Equals("forcedischarge"))
+                                schedule.fdSoc = 100 - schedule.fdSoc;
+                            
+
                             schedule.fdPwr = (int)(capacity / period);
                             schedule.minSocOnGrid = 10;
+                            if (schedule.minSocOnGrid > schedule.fdSoc)
+                                schedule.fdSoc = schedule.minSocOnGrid;
 
                             schedule.enable = 1;
                             scheduler.groups[count] = schedule;
                             status.active = 1;
-                      
-                            json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
-                            response = FoxPost("/op/v1/device/set/flag", json);
-                            Console.WriteLine("Enable = " + response);
-
-
-                            scheduler.deviceSN = chess.deviceData.deviceSN;
-                            
-                            response = FoxPost("/op/v1/device/scheduler/enable", JsonConvert.SerializeObject(scheduler, Formatting.Indented));
-
-                            Console.WriteLine("CHESS response " + response);
+                        
+ 
+                             
 
                             count++;
 
@@ -599,8 +603,25 @@ public class HomeController : Controller
 
 
                     }
+                    if (count > 1)
+                    {
+                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
+                        response = FoxPost("/op/v1/device/set/flag", json);
+                        Console.WriteLine("Enable = " + response);
 
-                    Thread.Sleep(3000);
+                        jsonschedule = JsonConvert.SerializeObject(scheduler, Formatting.Indented);
+
+                            
+                        response = FoxPost("/op/v1/device/scheduler/enable", jsonschedule);
+
+                        Console.WriteLine("CHESS response " + response);
+
+                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
+                        response = FoxPost("/op/v1/device/set/flag", json);
+                        Console.WriteLine("Enable = " + response);
+                        
+                    }
+                    
                     json = "{\r\n\t\"sns\": [\"" + chess.deviceData.deviceSN + "\"], \r\n\t\"variables\": []\r\n}";
                     response = FoxPost("/op/v1/device/real/query", json);
                     Console.WriteLine("Response " + response);
@@ -642,7 +663,7 @@ public class HomeController : Controller
   
                         url = Program.urlprefix + "/aas/submodels/" + chess.id + "PowerEntity/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
 
-                        update = "{\"value\":" + gridPower + "}";
+                        update = "{\"value\":" + (-invPower) + "}";
 
                         Console.WriteLine("Updating DT - " + url + " - " + update);
 
@@ -674,8 +695,8 @@ public class HomeController : Controller
                 }
                 catch (Exception ex) { Console.WriteLine(ex.ToString()); }
 
-                // 15 minute updates
-                Thread.Sleep(900000);
+                // 5 minute updates
+                Thread.Sleep(300000);
             }
 
         }
@@ -848,7 +869,7 @@ public class HomeController : Controller
 
 
 
-                    if (chess.deviceData.hasBattery && chess.deviceData.status == 1)
+                    if (chess.deviceData.hasBattery) // && chess.deviceData.status == 1)
                     {
 
                         // now set up the schedule for the assets in the CHESS
@@ -881,7 +902,9 @@ public class HomeController : Controller
                                 schedule.fdPwr = 1000;
                                 schedule.enable = 1;
                                 schedule.minSocOnGrid = 10;
-                                //schedule.maxSoc = 90;
+                                schedule.maxSoc = 100;
+                                if (schedule.workMode.ToLower().Equals("forcedischarge"))
+                                    schedule.fdSoc = 10;
                                 scheduler.groups[count] = schedule;
                                 status.active = 1;
 
@@ -915,4 +938,3 @@ public class HomeController : Controller
 
     }
 }
-
