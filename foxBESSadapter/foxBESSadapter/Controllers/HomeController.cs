@@ -897,9 +897,19 @@ public class HomeController : Controller
                                 schedule.endHour = Int32.Parse(status.endtime.Substring(0, 2));
                                 schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
                                 //schedule.extraParam = new ExtraParam();
+ 
+                                TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0);
+                                TimeSpan end = new TimeSpan(schedule.endHour, schedule.startMinute, 0);
 
+                                Double period = end.Subtract(start).TotalMinutes / 60;
+                                Double capacity = Double.Parse(status.capacity);
+                                
                                 schedule.fdSoc = 90;
-                                schedule.fdPwr = 1000;
+        
+
+                                schedule.fdPwr = (int)(capacity / period);
+                                schedule.minSocOnGrid = 10;
+                             
                                 schedule.enable = 1;
                                 schedule.minSocOnGrid = 10;
                                 schedule.maxSoc = 100;
