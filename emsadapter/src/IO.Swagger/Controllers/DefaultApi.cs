@@ -531,7 +531,7 @@ namespace IO.Swagger.Controllers
                     pvPowerTS.Add(pvPower);
 
                     // Get the BESS grid power
-                    url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "PowerEntity/submodel-elements/sme-" + bess + "gridPower/$value";
+                    url = "http://aasserver.default.svc/api/v3.0/submodels/" + bess + "telemetry/submodel-elements/sme-" + bess + "gridPower/$value";
 
                     Console.WriteLine("Getting from DT - " + url);
                     result = Get(url, token);
