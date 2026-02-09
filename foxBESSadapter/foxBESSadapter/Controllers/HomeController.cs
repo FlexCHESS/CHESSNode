@@ -661,7 +661,7 @@ public class HomeController : Controller
 
                         Console.WriteLine(result);
   
-                        url = Program.urlprefix + "/aas/submodels/" + chess.id + "PowerEntity/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
+                        url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
 
                         update = "{\"value\":" + (-invPower) + "}";
 
