@@ -815,7 +815,7 @@ namespace IO.Swagger.Controllers
                             } else {
                                 // ToDo: We are under the capacity limit and no excess generation 
 
-
+                                flexPower = 0;
                             }
 
 
