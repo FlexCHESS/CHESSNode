@@ -580,7 +580,7 @@ public class HomeController : Controller
                             schedule.minSocOnGrid = 10;
                             if (schedule.minSocOnGrid > schedule.fdSoc)
                                 schedule.fdSoc = schedule.minSocOnGrid;
-
+                            schedule.maxSoc = 100;
                             schedule.enable = 1;
                             scheduler.groups[count] = schedule;
                             status.active = 1;
