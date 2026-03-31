@@ -1,5 +1,6 @@
 /*
- * CHESS adapter for Fox BESS
+ * CHESS adapter for Fox BESS - using the Fox ESS cloud APIs 
+ * 
  * tim@toshiba-bril.com
  */
 
@@ -695,8 +696,8 @@ public class HomeController : Controller
                 }
                 catch (Exception ex) { Console.WriteLine(ex.ToString()); }
 
-                // 5 minute updates
-                Thread.Sleep(300000);
+                // 2 minute updates
+                Thread.Sleep(120000);
             }
 
         }
