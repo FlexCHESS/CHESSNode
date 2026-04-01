@@ -1,6 +1,6 @@
 /*
- * CHESS adapter for Fox BESS - using the Fox ESS cloud APIs 
- * 
+ * CHESS adapter for Fox BESS - Using the FoxESS Cloud APIs
+ *
  * tim@toshiba-bril.com
  */
 
@@ -555,44 +555,18 @@ public class HomeController : Controller
 
                         if (!status.status.Contains("available") && getStatus(status) && status.active == 0)
                         {
-                            Schedule schedule = new Schedule();
-                            schedule.workMode = status.status;
-                            schedule.startHour = Int32.Parse(status.starttime.Substring(0, 2));
-                            schedule.startMinute = Int32.Parse(status.starttime.Substring(3, 2));
-                            schedule.endHour = Int32.Parse(status.endtime.Substring(0, 2));
-                            schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
-
-                            TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0);
-                            TimeSpan end = new TimeSpan(schedule.endHour, schedule.startMinute, 0);
-
-                            Double period = end.Subtract(start).TotalMinutes / 60;
-                            Double capacity = Double.Parse(status.capacity);
-                            //schedule.extraParam = new ExtraParam();
-
-                            if (totalEnergy > 0)
-                                schedule.fdSoc = (int)(100 * capacity / totalEnergy);
-                            else schedule.fdSoc = 90;
-
-                            if (schedule.workMode.ToLower().Equals("forcedischarge"))
-                                schedule.fdSoc = 100 - schedule.fdSoc;
-                            
-
-                            schedule.fdPwr = (int)(capacity / period);
-                            schedule.minSocOnGrid = 10;
-                            if (schedule.minSocOnGrid > schedule.fdSoc)
-                                schedule.fdSoc = schedule.minSocOnGrid;
-                            schedule.maxSoc = 100;
-                            schedule.enable = 1;
-                            scheduler.groups[count] = schedule;
+                               
                             status.active = 1;
                         
- 
+                            json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
+                            response = FoxPost("/op/v1/device/set/flag", json);
+                            Console.WriteLine("Enable = " + response);
                              
 
                             count++;
 
                         }
-                        else 
+                        else if (status.active == 1)
                         {
                                                   
                             json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
@@ -604,24 +578,7 @@ public class HomeController : Controller
 
 
                     }
-                    if (count > 1)
-                    {
-                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
-                        response = FoxPost("/op/v1/device/set/flag", json);
-                        Console.WriteLine("Enable = " + response);
-
-                        jsonschedule = JsonConvert.SerializeObject(scheduler, Formatting.Indented);
-
-                            
-                        response = FoxPost("/op/v1/device/scheduler/enable", jsonschedule);
-
-                        Console.WriteLine("CHESS response " + response);
-
-                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
-                        response = FoxPost("/op/v1/device/set/flag", json);
-                        Console.WriteLine("Enable = " + response);
-                        
-                    }
+                  
                     
                     json = "{\r\n\t\"sns\": [\"" + chess.deviceData.deviceSN + "\"], \r\n\t\"variables\": []\r\n}";
                     response = FoxPost("/op/v1/device/real/query", json);
@@ -899,6 +856,21 @@ public class HomeController : Controller
                                 schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
                                 //schedule.extraParam = new ExtraParam();
  
+                                var remoteTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+                         
+                                if (remoteTimeZone.IsDaylightSavingTime(DateTime.Now))
+                                {
+                                    schedule.startHour += 2;
+                                    schedule.endHour += 2;
+                                } else
+                                {
+                                    schedule.startHour += 1;
+                                    schedule.endHour += 1;
+                                }
+
+                                if (schedule.startHour > 23) schedule.startHour -= 24;
+                                if (schedule.endHour > 23) schedule.endHour -= 24;
+
                                 TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0);
                                 TimeSpan end = new TimeSpan(schedule.endHour, schedule.startMinute, 0);
 
