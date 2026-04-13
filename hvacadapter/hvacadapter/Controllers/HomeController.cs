@@ -1,5 +1,6 @@
 /*
- * CHESS adapter for HVAC
+ * CHESS adapter for simulated HVAC/PV - using building thermal model and weather forecast
+ *
  * tim@toshiba-bril.com
  */
 
