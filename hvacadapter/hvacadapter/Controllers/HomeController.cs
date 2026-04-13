@@ -1,5 +1,5 @@
 /*
- * CHESS adapter for Simulated HVAC
+ * CHESS adapter for HVAC
  * tim@toshiba-bril.com
  */
 
@@ -340,7 +340,7 @@ namespace hvacadapter.Controllers
         protected static List<CHESS> assets;
         protected static String authToken = null;
         private readonly ILogger<HomeController> _logger;
-        private readonly Double alpha = 0.9;
+        private readonly Double alpha = 29.6;
         private readonly Double beta = 0.0568;
         private readonly Double ksun = 0.9256;
         private readonly Double kint = 0.9691;
@@ -426,41 +426,6 @@ namespace hvacadapter.Controllers
 
 
         /// <summary>
-        /// Forecast the schedule for the following day
-        /// </summary>
-        /// 
-
-        protected Double[] forecast(Weather weather, Double[] temperature)
-        {
-            Double[] totalPowerConsumed = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            Double[] nextTemperature = temperature;
-            Double[] thisTemperature = temperature;
-            for (int bin = 0; bin < weather.hourly.temperature_2m.Length; bin++)
-            {
-                // go through the day to predict the load profile - the forecast in hourly values for 24 hours
-
-                
-                Double pvPower = (weather.hourly.global_tilted_irradiance[bin] * 350);
-                Double[] hvacPower = { 0, 0, 0 };
-                totalPowerConsumed[bin] = -pvPower;
-                for (int i = 0; i < 3; i++)
-                {
-
-
-                    Double ta = weather.hourly.temperature_2m[bin] + 273;
-                    hvacPower[i] = (thisTemperature[i] - (1 - 0.001 * alpha) * nextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);
-                    thisTemperature[i] = nextTemperature[i];
-                    nextTemperature[i] = ((1 - 0.001 * alpha) * thisTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i]));
-
-                    Console.WriteLine("Time " + bin + " HVAC power " + i + " = " + hvacPower[i]);
-                    totalPowerConsumed[bin] += 1000*hvacPower[i];
-                }
-            }
-            return totalPowerConsumed;
-
-        }
-
-        /// <summary>
         /// Polling loop to update  CHESS DT  - It is not necessary if this is done in the MQTT telemetry handler (TBC) 
         /// </summary>
         /// 
@@ -497,6 +462,7 @@ namespace hvacadapter.Controllers
                     // check for status changes
                     Console.WriteLine("Asset - " + asset + " " + chess.identifier);
                     int count = 0;
+                    TimeSpan now = DateTime.Now.TimeOfDay;
 
                     String url = Program.urlprefix + "/aas/submodels/" + chess.id.Replace("-sim","") + "telemetry/submodel-elements/$value";
 
@@ -513,6 +479,7 @@ namespace hvacadapter.Controllers
                         hvacPower[0] = dtLookup(dtData, "MRA_P8_CDZ_Wsys");
                         hvacPower[1] = dtLookup(dtData, "MRC_GN_CDZ_Wsys");
                         hvacPower[2] = dtLookup(dtData, "MRD_GN_CDZ_Wsys");
+                        
                     } else
                         Console.WriteLine("Cannot get telemmetry data from DT");
 
@@ -520,107 +487,34 @@ namespace hvacadapter.Controllers
 
                     string[] location = chess.location.Split(' ');
 
-                    result = Get("https://api.open-meteo.com/v1/forecast?latitude=" + location[0] + "&longitude=" + location[1] + "&hourly=temperature_2m,diffuse_radiation,direct_normal_irradiance,global_tilted_irradiance,direct_radiation&tilt=20&azimuth=30&current=temperature_2m&forecast_days=1", "none");                  
+                    result = Get("https://api.open-meteo.com/v1/forecast?latitude=" + location[0] + "&longitude=" + location[1] + "&hourly=temperature_2m,diffuse_radiation,direct_normal_irradiance,global_tilted_irradiance,direct_radiation&tilt=30&azimuth=20&current=temperature_2m&forecast_days=1", "none");                  
 
                     Console.WriteLine ("Got " + result);
                     Weather weather = JsonConvert.DeserializeObject<Weather>(result);
 
               
                     // Use the current temperature 
-                    if (weather != null)
+                    if (weather != null) {
                         ta = weather.current.temperature_2m + 273;
+                        pvPower = (weather.hourly.global_tilted_irradiance[now.Hours] * 20);
+                    }
                     else 
                         Console.WriteLine("Cannot get current temp");
 
+              
+        
+
                     for (int i=0; i<3; i++)
-                        temperature[i] = (1-0.001*alpha) * lastTemperature[i] + 0.001*(alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i] );
-
-                    
-
-               
-                    TimeSpan now = DateTime.Now.TimeOfDay;
-                    if (now.Hours == 0 && now.Minutes == 0)
                     {
-                        // At midnight we forecast the next day
-
-                        Double[] totalPower = forecast(weather, temperature);
-                        int startBin = -1;
-                        
-                        List<Status> activeStatus = new List<Status>();
-
-                        // check what flexibility is required
-                        for (int bin = 0; bin < totalPower.Length; bin++)
-                        {
-                            Console.WriteLine("Forecast bin " + bin + " power " + totalPower[bin]);
-                            if (totalPower[bin] > powerLimit)
-                            {
-                                // need to shed load
-                                Console.WriteLine("Need to reduce power at hour " + bin);
-                                if (startBin < 0)
-                                    startBin = bin;
-
-                            }
-                            else if (totalPower[bin] < 0)
-                            {
-                                Console.WriteLine("Can increase power at hour " + bin);
-                                if (startBin < 0)
-                                    startBin = bin;
-                            }
-                            else if (startBin >= 0)
-                            {
-                                Double total = 0;
-                                for (int i=startBin; i<=bin; i++)
-                                        total += totalPower[i];
-                                // can increase load
-                                Console.WriteLine("Can accept power at hour " + bin);
-                                if (totalPower[bin] < powerLimit && total > 0)
-                                {
-                                    
-                                    
-                                    Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
-                                    Status status = new Status();
-                                    status.status = "ForceDischarge";
-                                    status.starttime = startBin.ToString("D2") + ":00";
-                                    status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = (total - powerLimit*(bin-startBin)).ToString();
-                                    status.recurrence = "daily";
-                                    activeStatus.Add(status);
-                                    startBin = -1;
-                                }
-                                else if (totalPower[bin] > 0 && total < 0)
-                                {
-
-                                    Console.WriteLine("Flexibility period from " + startBin + " to " + bin);
-                                    Status status = new Status();
-                                    status.status = "ForceCharge";
-                                    status.starttime = startBin.ToString("D2") + ":00";
-                                    status.endtime = bin.ToString("D2") + ":00";
-                                    status.capacity = (-total).ToString();
-                                    status.recurrence = "daily";
-                                    activeStatus.Add(status);
-                                    startBin = -1;
-                                }
-
-                            }
-                            
-                           
-                        }
-
-                        // we can invoke the status API to update the EMS adapter with the new flexibility schedule
-
-                        if (activeStatus.Count > 0)
-                        {
-                            chess.status = activeStatus.ToArray();
-                            url = Program.urlprefix + "http://emsadapter.default.svc/status/"+chess.id.Replace("-sim","")+"?limit="+powerLimit;
-                            String json = JsonConvert.SerializeObject(chess);
-                            Console.WriteLine("Updating CHESS flexibility status - " + url + " - " + json);
-                            result = Post(url, json, authToken);
-                            Console.WriteLine(result);
-
-                           
-                        }
-
+                        if (now.Hours<6 || now.Hours>18) 
+                             temperature[i] = 287*0.1 + lastTemperature[i]*0.9;
+                        else temperature[i] = 294*0.1 + lastTemperature[i]*0.9;
+                        hvacPower[i] = 20*((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                        if (hvacPower[i] < 0) hvacPower[i] = 0;
                     }
+               
+                 
+
 
                     List<Double> nextTemperature = new List<Double>();
                     List<Double> endTemperature = new List<Double>();
@@ -677,10 +571,18 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                      hvacPower[i]-=0.001*capacity/period;                    
-                                      nextTemperature.Add( (1-0.001*alpha) * lastNextTemperature[i] + 0.001*(alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i]) );
-                                      endTemperature.Add( (1-0.001*alpha) * lastNextTemperature[i] + 0.001*(alpha * tempAtEnd + ksun * beta * pvPower + khvac * beta * hvacPower[i]) );
-
+                                        if (now.Hours<6 || now.Hours>18)
+                                        {
+                                            hvacPower[i]=(lastNextTemperature[i]*0.9+287*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
+                                            nextTemperature.Add( lastNextTemperature[i]*0.9+287*0.1  );
+                                            endTemperature.Add( 287 );
+                                             
+                                        } else
+                                        {
+                                            hvacPower[i]=(lastNextTemperature[i]*0.9+294*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
+                                            nextTemperature.Add( lastNextTemperature[i]*0.9+294*0.1  );
+                                            endTemperature.Add( 294 );
+                                        }
                                     }
 
          ;
@@ -693,9 +595,17 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                      hvacPower[i]+=0.001*capacity/period;                    
-                                      nextTemperature.Add( (1-0.001*alpha) * lastNextTemperature[i] + 0.001*(alpha * ta + ksun * beta * pvPower + khvac * beta * hvacPower[i]) );
-                                      endTemperature.Add( (1-0.001*alpha) * lastNextTemperature[i] + 0.001*(alpha * tempAtEnd + ksun * beta * pvPower + khvac * beta * hvacPower[i]) );
+                                         if (now.Hours<6 || now.Hours>18)
+                                        {
+                                            hvacPower[i]=(lastNextTemperature[i]*0.9+285*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
+                                            nextTemperature.Add( lastNextTemperature[i]*0.9+285*0.1  );
+                                            endTemperature.Add( 285 );                                       
+                                        } else
+                                        {
+                                            hvacPower[i]=(lastNextTemperature[i]*0.9+292*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                   
+                                            nextTemperature.Add( lastNextTemperature[i]*0.9+292*0.1  );
+                                            endTemperature.Add( 292 );
+                                        }
 
                                     }
  
@@ -795,6 +705,54 @@ namespace hvacadapter.Controllers
 
                     Console.WriteLine(result);
                     
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRA_P8_CDZ_Wsys/invoke/$value";
+
+                    update = "{\"value\":" + hvacPower[0] + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
+
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRC_CDZ_Wsys/invoke/$value";
+
+                    update = "{\"value\":" + hvacPower[1] + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
+
+
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRD_CDZ_Wsys/invoke/$value";
+
+                    update = "{\"value\":" + hvacPower[2] + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
+                    
+                    // For now we will predict PV power from forecast
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id.Replace("-sim","") + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRB_GN_FV_Wsys/invoke/$value";
+
+                    update = "{\"value\":" + (-pvPower/1000) + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
                     
                 } catch (Exception ex) { Console.WriteLine(ex);}
 
