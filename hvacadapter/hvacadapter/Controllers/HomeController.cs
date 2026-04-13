@@ -4,6 +4,7 @@
  * tim@toshiba-bril.com
  */
 
+
 using hvacadapter;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -427,7 +428,7 @@ namespace hvacadapter.Controllers
 
 
         /// <summary>
-        /// Polling loop to update  CHESS DT  - It is not necessary if this is done in the MQTT telemetry handler (TBC) 
+        /// Polling loop to update  CHESS DT  
         /// </summary>
         /// 
 
@@ -441,6 +442,7 @@ namespace hvacadapter.Controllers
       
             Double pvPower = 0;
             Double[] hvacPower = {0,0,0};
+            Double[] simhvacPower = {0,0,0};
             Double powerLimit = 150000;
 
             CHESS chess = assets[asset];
@@ -449,7 +451,9 @@ namespace hvacadapter.Controllers
             Double dischargeTotal = 0;
             Double[] temperature = {293, 293, 293};
             Double[] lastTemperature = {293, 293, 293};    
-            Double[] lastNextTemperature = {293, 293, 293};    
+            Double[] simLastTemperature = {293, 293, 293};
+            Double[] simTemperature = {293, 293, 293};
+
             Double ta = 0;        
 
      
@@ -511,7 +515,9 @@ namespace hvacadapter.Controllers
                              temperature[i] = 287*0.1 + lastTemperature[i]*0.9;
                         else temperature[i] = 294*0.1 + lastTemperature[i]*0.9;
                         hvacPower[i] = 20*((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
-                        if (hvacPower[i] < 0) hvacPower[i] = 0;
+                        //if (hvacPower[i] < 0) hvacPower[i] = 0;
+                        hvacPower[i] = Math.Abs(hvacPower[i]);
+                        lastTemperature[i] = temperature[i];
                     }
                
                  
@@ -572,18 +578,21 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                        if (now.Hours<6 || now.Hours>18)
+                                        if (ta > 286) 
                                         {
-                                            hvacPower[i]=(lastNextTemperature[i]*0.9+287*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
-                                            nextTemperature.Add( lastNextTemperature[i]*0.9+287*0.1  );
-                                            endTemperature.Add( 287 );
-                                             
-                                        } else
+                                            if (now.Hours<6 || now.Hours>18) 
+                                                simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
+                                            else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
+                                        } else 
                                         {
-                                            hvacPower[i]=(lastNextTemperature[i]*0.9+294*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
-                                            nextTemperature.Add( lastNextTemperature[i]*0.9+294*0.1  );
-                                            endTemperature.Add( 294 );
+                                            if (now.Hours<6 || now.Hours>18) 
+                                                simTemperature[i] = 285*0.1 + simLastTemperature[i]*0.9;
+                                            else simTemperature[i] = 292*0.1 + simLastTemperature[i]*0.9;
                                         }
+                                        simhvacPower[i] = 20*((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                                      
+                                        nextTemperature.Add(simTemperature[i]);
+                                        simLastTemperature[i] = simLastTemperature[i];
                                     }
 
          ;
@@ -596,20 +605,23 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                         if (now.Hours<6 || now.Hours>18)
+                                        if (ta < 286) 
                                         {
-                                            hvacPower[i]=(lastNextTemperature[i]*0.9+285*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                    
-                                            nextTemperature.Add( lastNextTemperature[i]*0.9+285*0.1  );
-                                            endTemperature.Add( 285 );                                       
-                                        } else
+                                            if (now.Hours<6 || now.Hours>18) 
+                                                simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
+                                            else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
+                                        } else 
                                         {
-                                            hvacPower[i]=(lastNextTemperature[i]*0.9+292*0.1 - (1 - 0.001 * alpha) * lastNextTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta);                   
-                                            nextTemperature.Add( lastNextTemperature[i]*0.9+292*0.1  );
-                                            endTemperature.Add( 292 );
+                                            if (now.Hours<6 || now.Hours>18) 
+                                                simTemperature[i] = 285*0.1 + simLastTemperature[i]*0.9;
+                                            else simTemperature[i] = 292*0.1 + simLastTemperature[i]*0.9;
                                         }
-
+                                        simhvacPower[i] = 20*((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                                    
+                                        nextTemperature.Add(simTemperature[i]);
+                                        simTemperature[i] = simLastTemperature[i];
                                     }
- 
+
                                 }
 
 
@@ -632,8 +644,10 @@ namespace hvacadapter.Controllers
                     String update = "{\"value\":\"[" + (temperature[0]-273) + "," + (temperature[1]-273) + "," + (temperature[2]-273) + "," + weather.current.temperature_2m + "]\"}";
 
                     for (int i=0; i<3; i++)
+                    {
                         lastTemperature[i] = temperature[i];
-
+                        simTemperature[i] = simLastTemperature[i];
+                    }
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
                     result = Post(url, update, authToken);
@@ -649,9 +663,6 @@ namespace hvacadapter.Controllers
                     update += weather.current.temperature_2m; //update.Trim(',');
                     update +=  "]\"}";
 
-                    if (nextTemperature.Count >= 3)
-                    for (int i=0; i<3; i++)
-                        lastNextTemperature[i] = nextTemperature[i];
 
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
@@ -677,7 +688,7 @@ namespace hvacadapter.Controllers
 
                     url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "MRA_P8_CDZ_Wsys/invoke/$value";
 
-                    update = "{\"value\":" + hvacPower[0] + "}";
+                    update = "{\"value\":" + simhvacPower[0] + "}";
 
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
@@ -687,7 +698,7 @@ namespace hvacadapter.Controllers
 
                     url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "MRC_CDZ_Wsys/invoke/$value";
 
-                    update = "{\"value\":" + hvacPower[1] + "}";
+                    update = "{\"value\":" + simhvacPower[1] + "}";
 
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
@@ -698,7 +709,7 @@ namespace hvacadapter.Controllers
 
                     url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "MRD_CDZ_Wsys/invoke/$value";
 
-                    update = "{\"value\":" + hvacPower[2] + "}";
+                    update = "{\"value\":" + simhvacPower[2] + "}";
 
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
@@ -707,11 +718,6 @@ namespace hvacadapter.Controllers
                     Console.WriteLine(result);
                     
 
-                    Console.WriteLine("Updating DT - " + url + " - " +update);
-
-                    result = Post(url, update, authToken);
-
-                    Console.WriteLine(result);
 
                     url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRA_P8_CDZ_Wsys/invoke/$value";
 
