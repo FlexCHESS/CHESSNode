@@ -4,10 +4,6 @@
  * tim@toshiba-bril.com
  */
 
-/*
- * CHESS adapter for HVAC
- * tim@toshiba-bril.com
- */
 
 using hvacadapter;
 using Microsoft.AspNetCore.Mvc;
