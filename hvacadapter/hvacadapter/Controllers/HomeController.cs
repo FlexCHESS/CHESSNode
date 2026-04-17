@@ -4,6 +4,10 @@
  * tim@toshiba-bril.com
  */
 
+/*
+ * CHESS adapter for HVAC
+ * tim@toshiba-bril.com
+ */
 
 using hvacadapter;
 using Microsoft.AspNetCore.Mvc;
@@ -514,14 +518,15 @@ namespace hvacadapter.Controllers
                         if (now.Hours<6 || now.Hours>18) 
                              temperature[i] = 287*0.1 + lastTemperature[i]*0.9;
                         else temperature[i] = 294*0.1 + lastTemperature[i]*0.9;
-                        hvacPower[i] = 20*((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
-                        //if (hvacPower[i] < 0) hvacPower[i] = 0;
-                        hvacPower[i] = Math.Abs(hvacPower[i]);
+                        hvacPower[i] = ((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                        if (hvacPower[i] < 0) hvacPower[i] = 0;
+                        else
+                            hvacPower[i] = Math.Abs(hvacPower[i]);
                        
                         if (now.Hours<6 || now.Hours>18) 
                             simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
                         else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
-                        simhvacPower[i] = 20*((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                        simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
  
                     }
                
@@ -547,9 +552,6 @@ namespace hvacadapter.Controllers
                             schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
                             
                             Double capacity = Double.Parse(status.capacity);
-
-
-
                             schedule.enable = 1;
                             scheduler.groups[count] = schedule;
                             status.active = 1;
@@ -558,12 +560,15 @@ namespace hvacadapter.Controllers
                             TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0); 
                             TimeSpan end = new TimeSpan(schedule.endHour, schedule.endMinute, 0);
 
+                  
                             Console.WriteLine("Status " + status.status + " " + status.starttime + " " + status.endtime + " " + schedule.startHour + ":" + schedule.startMinute + " " + schedule.endHour + ":" + schedule.endMinute);
                 
                             if (start <= now && end > now)
                             {
                                 Console.WriteLine("Schedule active " + count);
                                 Double period = end.Subtract(start).TotalMinutes;
+                                Double flexPower = 60 * capacity   / (10000 * period); 
+
                                 // Use the forecast temp at end of the period to compare to see if this will impact indoor temperature more
                                 Console.WriteLine("Time at end is " + schedule.endHour);
                                 Double tempAtEnd = weather.hourly.temperature_2m[ schedule.endHour ] + 273;
@@ -571,8 +576,8 @@ namespace hvacadapter.Controllers
  
 
                                 Console.WriteLine("Capacity is " + capacity);
-
-                                if (status.status.Contains("ForceDischarge") || status.status.Contains("Feedin") || status.status.Contains("SelfUse"))
+ 
+                                if (status.status.Contains("Discharge") || status.status.Contains("Feedin") || status.status.Contains("SelfUse"))
                                 {
                                     Console.WriteLine("Discharging");
                                   
@@ -583,18 +588,10 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                        if (ta > 286) 
-                                        {
-                                            if (now.Hours<6 || now.Hours>18) 
-                                                simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
-                                            else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
-                                        } else 
-                                        {
-                                            if (now.Hours<6 || now.Hours>18) 
-                                                simTemperature[i] = 285*0.1 + simLastTemperature[i]*0.9;
-                                            else simTemperature[i] = 292*0.1 + simLastTemperature[i]*0.9;
-                                        }
-                                        simhvacPower[i] = 20*((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) + (flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+
+                            
+                                        simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
                                       
                                         nextTemperature.Add(simTemperature[i]);
                                      
@@ -605,23 +602,12 @@ namespace hvacadapter.Controllers
                                 {
 
                                     Console.WriteLine("Charging");
-                                    
-                                    chargeTotal += capacity/period;
-
                                     for (int i=0; i<3; i++)      
                                     { 
-                                        if (ta < 286) 
-                                        {
-                                            if (now.Hours<6 || now.Hours>18) 
-                                                simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
-                                            else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
-                                        } else 
-                                        {
-                                            if (now.Hours<6 || now.Hours>18) 
-                                                simTemperature[i] = 285*0.1 + simLastTemperature[i]*0.9;
-                                            else simTemperature[i] = 292*0.1 + simLastTemperature[i]*0.9;
-                                        }
-                                        simhvacPower[i] = 20*((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
+                                    
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) - (flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+
+                                        simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
                                     
                                         nextTemperature.Add(simTemperature[i]);
                                      
