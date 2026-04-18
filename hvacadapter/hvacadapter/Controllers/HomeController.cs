@@ -584,7 +584,7 @@ namespace hvacadapter.Controllers
 
                                     for (int i=0; i<3; i++)      
                                     { 
-                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) + (flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) + (simhvacPower[i] + flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
 
                             
                                         simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
@@ -601,7 +601,7 @@ namespace hvacadapter.Controllers
                                     for (int i=0; i<3; i++)      
                                     { 
                                     
-                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) - (flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower ) + (simhvacPower[i] - flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
 
                                         simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
                                     
