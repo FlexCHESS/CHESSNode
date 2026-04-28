@@ -449,10 +449,16 @@ namespace IO.Swagger.Controllers
             Double lastTotalPower = 0;
             Double flexPower = 0;
             int currentLevel = 1;
-            Double[,] evcsprob = {{1,0.666666667}, {1,0.416666667}, {0.916666667,0.333333333}, {1,0.416666667},  {1,0.583333333}, {0.916666667,0.25}, {0.916666667,0}, {0.916666667,0.083333333}, {1,0.333333333}, {0.916666667,0.583333333}, {0.916666667,1},  {0.916666667,1},  {0.916666667,0.583333333},  {0.916666667,0.5}, {0.916666667,0.166666667},  {0.916666667,0}, {0.916666667,0}, {0.916666667,0}, {0.916666667,0.25},  {0.916666667,0.333333333},  {0.916666667,0.166666667},  {0.916666667,0.833333333},  {0.916666667,0.583333333},  {0.833333333,0.5}};
+            Double[,] evcsprob = {{ 0.062328, 0.012466 }, { 0.029893, 0.005979 }, { 0.019639, 0.003928 }, { 0.013516, 0.002703 }, { 0.014320, 0.002864 }, { 0.033710, 0.006742 }, { 0.087498, 0.017500 }, { 0.310464, 0.062093 }, { 0.535058, 0.107012 }, { 0.490009, 0.098002 }, { 0.361292, 0.072258 }, { 0.412771, 0.082554 }, { 0.381391, 0.076278 }, { 0.563156, 0.112631 }, { 0.717551, 0.143510 }, { 0.940438, 0.188088 }, { 1.000000, 0.200000 }, { 0.858835, 0.171767 }, { 0.622554, 0.124511 }, { 0.443141, 0.088628 }, { 0.284402, 0.056880 }, { 0.190273, 0.038055 }, { 0.097970, 0.019594 }, { 0.063561, 0.012712 }};
             Double[] tariff = {0.1203,0.1148,0.1111,0.1088,0.1088,0.1139,0.1269,0.1406,0.1489,0.1397,0.1271,0.1204,0.1117,0.1084,0.1122,0.1181,0.1275,0.1379,0.1502,0.1649,0.1569,0.1432,0.1307,0.1225};
 
-                    
+            DayOfWeek today = DateTime.Today.DayOfWeek;
+            int evcsprobOffset = 0;
+
+            if (DateTime.Today.DayOfWeek == DayOfWeek.Saturday || 
+                DateTime.Today.DayOfWeek == DayOfWeek.Sunday)        
+                    evcsprobOffset = 1;
+
             Console.WriteLine("BESS = " + bess);
 
             String objective  = "[{\"limits\": [ {\"name\":\"maxpower\", \"unit\":\"W\", \"value\":" + limit +"} ], \"options\": [{ \"Objective\": \"mincost\",  \"Option\": \"option1\", \"Status\": " + JsonConvert.SerializeObject(body.status) + "}]}]";
@@ -600,10 +606,11 @@ namespace IO.Swagger.Controllers
                                                     url = "";
                                                     Double dischargePower = 0;
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
+                                                    
                                                     foreach (ChessStatus csb in cs.status)
 
                                                         
-                                                        if (getStatus(csb) && csb.priority <= level && csb.status.ToLower().Contains("discharge"))
+                                                        if (getStatus(csb) && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
@@ -613,13 +620,13 @@ namespace IO.Swagger.Controllers
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                             dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;
 
-                                                            totalCostOut += dischargePower * csb.cycleCost / 1000;
+                                                            totalCostOut +=  dischargePower * csb.cycleCost / 1000;
                                                                                                     
                    
                                                             Console.WriteLine(result);
                                                             
 
-                                                        } else if (csb.priority <= level  && csb.status.ToLower().Contains("forcecharge"))
+                                                        } else if (csb.status.ToLower().Contains("forcecharge"))
                                                         {
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
@@ -635,9 +642,9 @@ namespace IO.Swagger.Controllers
                                                     if (dischargePower > 0) 
                                                     {
                                                         Console.WriteLine("Update " + update);  
-                                                        String response = Post(url, update, token);
-                                                        Console.WriteLine("Response " + response);
-                                                        if (response.Length > 10)
+                                                        //String response = Post(url, update, token);
+                                                        //Console.WriteLine("Response " + response);
+                                                        //if (response.Length > 10)
                                                             flexPower -= dischargePower;
                                                     }
                                                 }
@@ -686,12 +693,12 @@ namespace IO.Swagger.Controllers
                                             body.identifier = twin.Id.Substring(0, twin.Id.Length-13).Replace("_","-").ToLower();
                                             url = "http://aasserver.default.svc/status/"+twin.Id.Substring(0, twin.Id.Length-13);
                                             Console.WriteLine("Curtailing " + url  + " - " + JsonConvert.SerializeObject(body));
-                                            Console.WriteLine("Probability is " + evcsprob[now.Hour, 1]);
+                                            Console.WriteLine("Probability is " + evcsprob[now.Hour, evcsprobOffset]);
 
                                             String response = Post(url, JsonConvert.SerializeObject(body), token);
                                             Console.WriteLine("Response " + response);
                                             if (response.Length > 10)
-                                                flexPower -= twin.powerActiveImport * evcsprob[now.Hour, 1];
+                                                flexPower -= twin.powerActiveImport * evcsprob[now.Hour, evcsprobOffset];
                                         }   
                                     }
 
@@ -762,7 +769,7 @@ namespace IO.Swagger.Controllers
                                                     String update = "{\"identifier\":\"" + cs.identifier + "\", \"status\":[";
                                                     foreach (ChessStatus csb in cs.status)
 
-                                                        if (csb.priority == level && csb.status.ToLower().Contains("discharge"))
+                                                        if (csb.priority == level  && csb.status.ToLower().Contains("discharge"))
                                                         {
 
                                                            
@@ -786,9 +793,9 @@ namespace IO.Swagger.Controllers
                                                     if (chargePower > 0) 
                                                     {
                                                         Console.WriteLine("Update " + update);  
-                                                        String response = Post(url, update, token);
-                                                        Console.WriteLine("Response " + response);
-                                                        if (response.Length > 10)
+                                                        //String response = Post(url, update, token);
+                                                        //Console.WriteLine("Response " + response);
+                                                        //if (response.Length > 10)
                                                         {
                                                             flexPower += chargePower;
 
