@@ -511,17 +511,17 @@ namespace hvacadapter.Controllers
 
                     for (int i=0; i<3; i++)
                     {
-                        if (now.Hours<6 || now.Hours>18) 
-                             temperature[i] = 287*0.1 + lastTemperature[i]*0.9;
-                        else temperature[i] = 294*0.1 + lastTemperature[i]*0.9;
+                        if (now.Hours<8 || now.Hours>19) 
+                             temperature[i] = ta*0.04 + lastTemperature[i]*0.96;
+                        else temperature[i] = 298*0.04 + lastTemperature[i]*0.96;
                         hvacPower[i] = ((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
                         if (hvacPower[i] < 0) hvacPower[i] = 0;
                         else
                             hvacPower[i] = Math.Abs(hvacPower[i]);
                        
-                        if (now.Hours<6 || now.Hours>18) 
-                            simTemperature[i] = 287*0.1 + simLastTemperature[i]*0.9;
-                        else simTemperature[i] = 294*0.1 + simLastTemperature[i]*0.9;
+                        if (now.Hours<8 || now.Hours>19) 
+                            simTemperature[i] = ta*0.04 + simLastTemperature[i]*0.96;
+                        else simTemperature[i] = 298*0.04 + simLastTemperature[i]*0.96;
                         simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
  
                     }
