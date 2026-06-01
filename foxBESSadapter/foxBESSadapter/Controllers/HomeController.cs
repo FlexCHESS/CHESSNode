@@ -1,6 +1,5 @@
 /*
- * CHESS adapter for Fox BESS - Using the FoxESS Cloud APIs
- *
+ * CHESS adapter for Fox BESS - using FoxESS Cloud API
  * tim@toshiba-bril.com
  */
 
@@ -388,9 +387,10 @@ public class HomeController : Controller
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            if (assets == null)
+            if (assets == null) {
                 assets = new List<CHESS>();
-             Task.Run(() => MQTT.Connect());
+                Task.Run(() => MQTT.Connect());
+            }
         }
 
         // check for the activation of a chess status
