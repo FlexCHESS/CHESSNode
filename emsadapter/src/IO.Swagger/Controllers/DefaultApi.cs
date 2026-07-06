@@ -450,7 +450,7 @@ namespace IO.Swagger.Controllers
             Double flexPower = 0;
             int currentLevel = 1;
             Double[,] evcsprob = {{ 0.062328, 0.012466 }, { 0.029893, 0.005979 }, { 0.019639, 0.003928 }, { 0.013516, 0.002703 }, { 0.014320, 0.002864 }, { 0.033710, 0.006742 }, { 0.087498, 0.017500 }, { 0.310464, 0.062093 }, { 0.535058, 0.107012 }, { 0.490009, 0.098002 }, { 0.361292, 0.072258 }, { 0.412771, 0.082554 }, { 0.381391, 0.076278 }, { 0.563156, 0.112631 }, { 0.717551, 0.143510 }, { 0.940438, 0.188088 }, { 1.000000, 0.200000 }, { 0.858835, 0.171767 }, { 0.622554, 0.124511 }, { 0.443141, 0.088628 }, { 0.284402, 0.056880 }, { 0.190273, 0.038055 }, { 0.097970, 0.019594 }, { 0.063561, 0.012712 }};
-            Double[] tariff = {0.1203,0.1148,0.1111,0.1088,0.1088,0.1139,0.1269,0.1406,0.1489,0.1397,0.1271,0.1204,0.1117,0.1084,0.1122,0.1181,0.1275,0.1379,0.1502,0.1649,0.1569,0.1432,0.1307,0.1225};
+            Double[] tariff = {0.1111,0.1088,0.1088,0.1139,0.1269,0.1406,0.1489,0.1397,0.1271,0.1204,0.1117,0.1084,0.1122,0.1181,0.1275,0.1379,0.1502,0.1649,0.1569,0.1432,0.1307,0.1225,0.1203,0.1148};
 
             DayOfWeek today = DateTime.Today.DayOfWeek;
             int evcsprobOffset = 0;
@@ -499,7 +499,7 @@ namespace IO.Swagger.Controllers
  
                
                     // Get the building power data through AAS API
-                    String url = "http://aasserver.default.svc/api/v3.0/submodels/" + chess + "telemetry/submodel-elements/$value";
+                    String url = "http://aasserver.default.svc/api/v3.0/submodels/" + chess.Replace("chess2","chess1") + "telemetry/submodel-elements/$value";
 
                     Console.WriteLine("Getting from DT - " + url);
                     String result = Get(url, token);
@@ -616,9 +616,9 @@ namespace IO.Swagger.Controllers
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                             url = "http://aasserver.default.svc/status/" + cs.id;
                                                             Console.WriteLine("Discharge - " + url);
-                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
+                                                            //csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
-                                                            dischargePower = 60 * csb.capacityEnd  / duration.TotalMinutes;
+                                                            dischargePower = 60 * Double.Parse(csb.capacity)  / duration.TotalMinutes;
 
                                                             totalCostOut +=  dischargePower * csb.cycleCost / 1000;
                                                                                                     
@@ -631,10 +631,10 @@ namespace IO.Swagger.Controllers
 
                                                             TimeSpan duration = TimeSpan.Parse(csb.endtime).Subtract(TimeSpan.Parse(csb.starttime));
                                                          
-                                                            csb.capacity = Math.Round(csb.capacityEnd).ToString();
+                                                            //csb.capacity = Math.Round(csb.capacityEnd).ToString();
                                                             update += JsonConvert.SerializeObject(csb) + ",";
                                                                 
-                                                            totalCostIn += 60 * csb.capacityEnd  * csb.cycleCost / (duration.TotalMinutes * 1000);
+                                                            totalCostIn += 60 * Double.Parse(csb.capacity)  * csb.cycleCost / (duration.TotalMinutes * 1000);
  
                                                             Console.WriteLine(result);
                                                         }
@@ -793,9 +793,9 @@ namespace IO.Swagger.Controllers
                                                     if (chargePower > 0) 
                                                     {
                                                         Console.WriteLine("Update " + update);  
-                                                        //String response = Post(url, update, token);
-                                                        //Console.WriteLine("Response " + response);
-                                                        //if (response.Length > 10)
+                                                        String response = Post(url, update, token);
+                                                        Console.WriteLine("Response " + response);
+                                                        if (response.Length > 10)
                                                         {
                                                             flexPower += chargePower;
 
