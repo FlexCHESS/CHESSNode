@@ -1,5 +1,5 @@
 /*
- * CHESS adapter for Fox BESS - using FoxESS Cloud API
+ * CHESS adapter for Fox BESS
  * tim@toshiba-bril.com
  */
 
@@ -7,20 +7,16 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 using System.Net.NetworkInformation;
 using foxBESSadapter;
 using System.Globalization;
-using MQTTnet.Client;
-using MQTTnet.Extensions.TopicTemplate;
 
 namespace foxBESSadatper.Controllers
 {
 
-
-
+   
     // The main CHESS Status data structure 
     public class Status
     {
@@ -30,6 +26,8 @@ namespace foxBESSadatper.Controllers
         public String endtime { get; set; }
         public String capacity { get; set; }
         public String recurrence { get; set; }
+
+
 
         public Int32 active { get; set; }
     }
@@ -43,7 +41,10 @@ namespace foxBESSadatper.Controllers
         public String id { get; set; }
 
         public String currentStatus { get; set; }
-
+        public Double cycleCost { get; set; }
+        public Double capacityFade { get; set; }
+        public Double soc { get; set; }
+        public Double totalEnergy { get; set; }
         public Status[] status { get; set; }
         public DeviceData deviceData { get; set; }
 
@@ -110,7 +111,7 @@ namespace foxBESSadatper.Controllers
 
         public String deviceSN { get; set; }
         public String moduleSN { get; set; }
-        public String stationID { get; set; }
+        public String plantID { get; set; }
         public Int32 status { get; set; }
         public Boolean hasPV { get; set; }
         public Boolean hasBattery { get; set; }
@@ -132,9 +133,8 @@ namespace foxBESSadatper.Controllers
     // Device list response data
     public class DeviceListResponse
     {
-        public Int32 errno { get; set; }
-        public String msg { get; set; }
-        public DeviceList result { get; set; }
+        public Int32 Errno { get; set; }
+        public DeviceList Result { get; set; }
     }
 
     // Functions
@@ -162,25 +162,34 @@ namespace foxBESSadatper.Controllers
 
     }
 
-    public class Datas 
+    // DT Data
+    public class DTData
     {
-        public String variable { get; set; }
-        public String unit { get; set; }
-        public String name { get; set; }
-        public dynamic value { get; set; }
-  
+
+        public String Id {get; set;}
+        public String DataType {get; set;}
+        public String LevelType {get; set;}
+        public String ValueFormat {get; set;}
+        public String Symbol {get; set;}
+        public String Unit {get; set;}
+        public Double Value {get; set;}
+
     }
+
+   
 
     // Real-time data from devices
     public class RealData
     {
 
-        public String deviceSN { get; set;} 
-        public Datas[] datas {get; set;}
+
+        public String variable { get; set; }
+        public String unit { get; set; }
+        public String name { get; set; }
+        public Double value { get; set; }
         public String time { get; set; }
 
     }
-
 
     // Real-time data response
     public class RealDataResponse
@@ -188,21 +197,6 @@ namespace foxBESSadatper.Controllers
 
         public Int32 errno { get; set; }
         public RealData[] result { get; set; }
-
-    }
-
-
-    // DT Data
-    public class DTData
-    {
-
-        public String Id { get; set; }
-        public String DataType { get; set; }
-        public String LevelType { get; set; }
-        public String ValueFormat { get; set; }
-        public String Symbol { get; set; }
-        public String Unit { get; set; }
-        public Double Value { get; set; }
 
     }
 
@@ -247,22 +241,22 @@ namespace foxBESSadatper.Controllers
         public Int32 minSocOnGrid { get; set; }
         public Int32 fdSoc { get; set; }
         public Int32 fdPwr { get; set; }
-        public Int32 maxSoc { get; set; }
     }
 
     // Set of schedules for a scheduler
     public class Scheduler
     {
+
         public String deviceSN { get; set; }
+        public String enable { get; set; }
         public Schedule[] groups { get; set; }
     }
-
 
     public class SchedulerResponse
     {
         public Int32 errno { get; set; }
-        public String msg { get; set; }
-        public Scheduler result { get; set; }
+        public String Msg { get; set; }
+        public Scheduler Result { get; set; }
     }
 
     // Real-time data query response
@@ -291,106 +285,30 @@ namespace foxBESSadatper.Controllers
         public Int32 total { get; set; }
     }
 
-    public static class HomeControllerHelpers
-    {
-        public static string ToUnixTimeMilliSeconds(DateTime date)
-        {
-            DateTimeOffset dto = new DateTimeOffset(date);
-            return dto.ToUnixTimeMilliseconds().ToString();
-        }
-        public static string CreateMD5(string path, string key, string timestamp)
-        {
-            using (var md5 = System.Security.Cryptography.MD5.Create())
-            {
-                var inputBytes = Encoding.UTF8.GetBytes(path + "\\r\\n" + key + "\\r\\n" + timestamp);
-                var hashBytes = md5.ComputeHash(inputBytes);
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("x2"));
-                }
-                return sb.ToString();
-            }
-        }
-    }
-    public class MQTT
-    {
-        public static IMqttClient mqttClient;
-       
-        public static async Task<bool> Publish(string channel, string value)
-        {
-          
-            if (mqttClient.IsConnected == false)
-            {
-            
-                return false;
-            }
-
-            var message = new MQTTnet.MqttApplicationMessageBuilder()
-                    .WithTopic(channel)
-                    .WithPayload(value)
-                    .WithRetainFlag()
-                    .Build();
-            await mqttClient.PublishAsync(message);
-            return true;
-        }
-
-
-        //connect to mqtt
-
-        public static async Task Connect()
-        {
-            string clientId = Guid.NewGuid().ToString();
-            var factory = new MQTTnet.MqttFactory();
-        
-            mqttClient = factory.CreateMqttClient();
-          
-            var options = new MqttClientOptionsBuilder()
-                .WithTcpServer("uudex.default.svc", 1883)                    // MQTT broker address and port
-                .WithCredentials(Program.uudexUser, Program.uudexPass)       // Set username and password
-                .WithClientId(clientId)
-                .WithCleanSession()
-                .Build();
-
-            var connectResult = await mqttClient.ConnectAsync(options);
-        }
-
-    }
-
-
-/// <summary>
-///  Controller class for handling the requests (provided APIs) for the CHESS Node / Network Core  
-/// </summary>
-public class HomeController : Controller
+    /// <summary>
+    ///  Controller class for handling the requests (provided APIs) for the CHESS Node / Network Core  
+    /// </summary>
+    public class HomeController : Controller
     {
 
         protected static List<CHESS> assets;
         protected static String authToken = null;
         private readonly ILogger<HomeController> _logger;
-
-     
-
-        protected Double dtLookup(DTData[] dtData, String id)
+  
+        public Double dtLookup(DTData[] dtData, String id)
         {
-            Double rv = 0;
+
             foreach (DTData data in dtData)
-            if (data.Id.EndsWith(id)) 
-            {
-                    if (data.Symbol.Contains("k"))
-                        rv += data.Value*1000;
-                    else
-                        rv += data.Value;
-            }
-            return rv;
+            if (data.Id.EndsWith(id)) return data.Value;
+
+            return 0;
         }
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            if (assets == null) {
+            if (assets == null)
                 assets = new List<CHESS>();
-                Task.Run(() => MQTT.Connect());
-            }
         }
 
         // check for the activation of a chess status
@@ -433,228 +351,276 @@ public class HomeController : Controller
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             //request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             request.Timeout = 120000;
+            String responseString = "Error";
 
-            var data = Encoding.ASCII.GetBytes(json);
+            try {
+                var data = Encoding.ASCII.GetBytes(json);
 
-            request.Method = "POST";
-            request.ContentType = "application/json";
-            request.PreAuthenticate = true;
-            if (token != null)
-                request.Headers.Add("Authorization", token);
-            request.Accept = "application/json";
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(data, 0, data.Length);
-            }
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                request.PreAuthenticate = true;
+                if (token != null)
+                    request.Headers.Add("Authorization", token);
+                request.Accept = "application/json";
+                using (var stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
 
-            var response = (HttpWebResponse)request.GetResponse();
+                var response = (HttpWebResponse)request.GetResponse();
 
-            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
 
+            } catch (Exception ex) {Console.WriteLine(ex.ToString());}
             return responseString;
         }
 
-        // FoxPost -  remote HTTP request to FoxESS Cloud
-        private string FoxPost(string path, string json)
+        // Estimate cycle cost using empirical degradation model
+        protected Double cycleCost(Double SocMax, Double SocMin)
         {
-            DateTime now = DateTime.Now;
-            string timestamp = HomeControllerHelpers.ToUnixTimeMilliSeconds(now);
-            string signature = HomeControllerHelpers.CreateMD5(path, Program.key, timestamp);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.foxesscloud.com" + path);
-            //request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            request.Timeout = 120000;
-
-            var data = Encoding.ASCII.GetBytes(json);
-
-            Console.WriteLine("Hash " + signature + " payload " + json);
-
-            request.Method = "POST";
-            request.ContentType = "application/json";
-            request.PreAuthenticate = true;
-            request.Headers.Add("timestamp", timestamp);
-            request.Headers.Add("lang", "en");
-            request.Headers.Add("signature", signature);
-            request.Headers.Add("token", Program.key);
-            request.Accept = "application/json";
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(data, 0, data.Length);
-            }
-
-            var response = (HttpWebResponse)request.GetResponse();
-
-            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            Console.WriteLine("Response " + responseString);
-
-            return responseString;
+            Console.WriteLine("Soc max " + SocMax + " Soc min " + SocMin);
+            Double[] N  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};
+            int i = (int)( (SocMax - SocMin) * 10 );
+            Double total = 11460/28.2;
+            Double res = total / (2 * N[i] * (SocMax - SocMin));
+            return res;
         }
-
 
         /// <summary>
-        /// Polling loop to update  CHESS DT  
+        /// Polling loop to update  CHESS DT  - It is not necessary if this is done in the MQTT telemetry handler (TBC) 
         /// </summary>
         /// 
 
         protected void polling(int asset)
         {
 
-            String response = "";
-            String json = "";
+
+            Random rnd = new Random();
           
+            Double totalEnergy = 50000;
+            Double efficiency = 1;
+            Double maxPower = 0;
+            Double maxPower20 = 0;
+            Double maxPower80 = 0;
+            Double powerLimit = 0;
+  
             CHESS chess = assets[asset];
 
-      
-            Double totalEnergy = 0;
-            Double efficiency = 1;
+       
+            Double minSocOnGrid = 10;
+            Double chargeTotal = totalEnergy * minSocOnGrid/100;
+            Double dischargeTotal = 0;
+            Double lastChargeTotal = chargeTotal;
+            Double lastDischargeTotal = dischargeTotal;
+            Double temperature = 20;
 
-            String url = Program.urlprefix + "/aas/submodels/" + chess.id + "EnergyEntity/submodel-elements/$value";
-
-            Console.WriteLine("Getting max energy from DT - " + url);
-
-            String result = Get(url, authToken);
-
-            DTData[] dtData = JsonConvert.DeserializeObject<DTData[]>(result);
-            Console.WriteLine("Data " + dtData.ToString());
-
-            if (dtData != null && dtData.Length > 0)
-            {
-                totalEnergy = dtLookup(dtData, "maximumAllowedBatteryEnergy");
-                efficiency = dtLookup(dtData, "energyRoundtripEfficiency") / 100;
-                Console.WriteLine("TotalEnergy  " + totalEnergy + " Efficiency " + efficiency);
-            }
-            else
-                Console.WriteLine("Cannot get energy data from DT");
-
-
+            Double capacityFade = 0;
+                        
             while (true)
             {
+                 try {
+                    
 
-                Double chargeTotal = 0;
-                Double dischargeTotal = 0;
-                Double temperature = 0;
-                Double batSoC = 0;
-                Double gridPower = 0;
-                Double invPower = 0;
-                String jsonschedule = "";
+                    String url = Program.urlprefix + "/aas/submodels/" + chess.id + "EnergyEntity/submodel-elements/$value";
 
-                try
-                {
+                    Console.WriteLine("Getting energy entity from DT - " + url);
+                    String result = Get(url, authToken);
+                    Console.WriteLine("Got " + result);
+            
+                    DTData[] dtData = JsonConvert.DeserializeObject<DTData[]>(result);
+                    Console.WriteLine("Data " + dtData.ToString());
+                
+                    if (dtData != null && dtData.Length > 0)
+                    {
+                        totalEnergy = dtLookup(dtData, "maximumAllowedBatteryEnergy");      
+                        efficiency = dtLookup(dtData, "energyRoundtripEfficiency")/100;
+                    } else
+                        Console.WriteLine("Cannot get energy data from DT");
 
+
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "PowerEntity/submodel-elements/$value";
+
+                    Console.WriteLine("Getting power entity from DT - " + url);
+                    result = Get(url, authToken);
+                    Console.WriteLine("Got " + result);
+            
+                    dtData = JsonConvert.DeserializeObject<DTData[]>(result);
+
+                    if (dtData != null && dtData.Length > 0)
+                    {
+                        maxPower = dtLookup(dtData, "maximumAllowedBatteryPower");      
+                        maxPower20 = dtLookup(dtData, "powerCapabilityAt20Charge");
+                        maxPower80 = dtLookup(dtData, "powerCapabilityAt80Charge");
+                    
+                    } else
+                        Console.WriteLine("Cannot get power data from DT");       
+/*
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "StateOfBatteryEntity/submodel-elements/$value";
+
+                    Console.WriteLine("Getting state of battery entity from DT - " + url);
+                    result = Get(url, authToken);
+                    Console.WriteLine("Got " + result);
+
+                    dtData = JsonConvert.DeserializeObject<DTData[]>(result);
+
+                    if (dtData != null && dtData.Length > 0)
+                    {
+
+                        minSocOnGrid =  dtLookup(dtData, "minSocOnGrid");        
+                    
+                    } else
+                        Console.WriteLine("Cannot get SoC data from DT");       
+*/                  
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "VoltageEntity/submodel-elements/$value";
+
+                    Console.WriteLine("Getting voltage entity from DT - " + url);
+                    result = Get(url, authToken);
+                    Console.WriteLine("Got " + result);
+
+                    dtData = JsonConvert.DeserializeObject<DTData[]>(result);
+
+                    if (dtData != null && dtData.Length > 0)
+                    {
+
+                        capacityFade =  dtLookup(dtData, "capacityFade")/100;        
+                    
+                    } else
+                        Console.WriteLine("Cannot get voltage entity data from DT");       
+            
+               
                     // check for status changes
-                    int count = 0;
-                    Scheduler scheduler = new Scheduler();
-                    scheduler.groups = new Schedule[chess.status.Length];
-                    scheduler.deviceSN = chess.deviceData.deviceSN;
-          
-                    if (chess.status!=null)
-                    foreach (Status status in chess.status)
+                    int count = 0;                    
+                    TimeSpan now = DateTime.Now.TimeOfDay;
+
+                    if (chess.status != null)
+                    foreach (Status status in chess.status) 
                     {
                         // see if there are any weekday / weekend changes !
 
-
-                        if (!status.status.Contains("available") && getStatus(status) && status.active == 0)
+                        Scheduler scheduler = new Scheduler();
+                        scheduler.groups = new Schedule[chess.status.Length];
+                        if (!status.status.Contains("available") && getStatus(status)) 
                         {
-                               
-                            status.active = 1;
-                        
-                            json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
-                            response = FoxPost("/op/v1/device/set/flag", json);
-                            Console.WriteLine("Enable = " + response);
-                             
+                            Schedule schedule = new Schedule();
+                            schedule.workMode = status.status;
+                            schedule.startHour = Int32.Parse(status.starttime.Substring(0, 2));
+                            schedule.startMinute = Int32.Parse(status.starttime.Substring(3, 2));
+                            schedule.endHour = Int32.Parse(status.endtime.Substring(0, 2));
+                            schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
 
+                            Double capacity = Double.Parse(status.capacity);
+                            if (schedule.workMode.ToLower().Equals("forcecharge") && maxPower20 > 0 && maxPower80 > 0)
+                                powerLimit =  maxPower80 + (maxPower20 - maxPower80) * ((chargeTotal - dischargeTotal)  / totalEnergy);              
+                            else
+                                powerLimit = maxPower;
+                            if (powerLimit > maxPower) powerLimit = maxPower;
+
+                            Console.WriteLine("Power limit is " + powerLimit);
+
+                            schedule.enable = 1;
+
+                            scheduler.groups[count] = schedule;
+                            status.active = 1;
+
+                            TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0); 
+                            TimeSpan end = new TimeSpan(schedule.endHour, schedule.startMinute, 0);
+
+                            Console.WriteLine("Status " + status.status + " " + status.starttime + " " + status.endtime + " " + schedule.startHour + ":" + schedule.startMinute + " " + schedule.endHour + ":" + schedule.endMinute);
+                
+                            if (start <= now && end > now)
+                            {
+                                Console.WriteLine("Schedule active " + count);
+                                Double period = end.Subtract(start).TotalMinutes;
+                                if (60*capacity/period > powerLimit) capacity = period*powerLimit/60;
+                                Console.WriteLine("Capacity is " + capacity);
+
+                                if (status.status.Contains("ForceDischarge") || status.status.Contains("Feedin") || status.status.Contains("SelfUse"))
+                                {
+                                    Console.WriteLine("Discharging");
+                                  
+                                    dischargeTotal += capacity/period;
+
+                                    if (chargeTotal - dischargeTotal < totalEnergy * minSocOnGrid/100) dischargeTotal -= capacity/period;
+                                    
+                                  
+
+                                } else if ( status.status.Contains("ForceCharge") )
+                                {
+
+                                    Console.WriteLine("Charging");
+                                    
+                                    chargeTotal += capacity/period;
+
+                                    if (chargeTotal - dischargeTotal > totalEnergy) chargeTotal -= capacity/period;
+
+                                }
+
+                                
+                               
+
+
+
+                            }
                             count++;
 
-                        }
-                        else if (status.active == 1)
-                        {
-                                                  
-                            json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
-                            response = FoxPost("/op/v1/device/set/flag", json);
-
-                            Console.WriteLine("Disable = " + response);
+                        } else 
                             status.active = 0;
-                        }
 
-
-                    }
-                  
                     
-                    json = "{\r\n\t\"sns\": [\"" + chess.deviceData.deviceSN + "\"], \r\n\t\"variables\": []\r\n}";
-                    response = FoxPost("/op/v1/device/real/query", json);
-                    Console.WriteLine("Response " + response);
-                    RealDataResponse realData = JsonConvert.DeserializeObject<RealDataResponse>(response);
-
-                    if (realData.result != null)
-                    foreach (RealData rd in realData.result)
-                    {
-
-                        foreach (Datas data in rd.datas)
-                        {
-                            MQTT.Publish("N/" + chess.id + data.variable, "{\"unit\": \""+ data.unit + "\", \"name\": \""+data.name+"\", \"value\": "+ data.value.ToString() + "}").Wait();
-                            if (data.variable.Equals("chargeEnergyTotal"))
-                                chargeTotal = data.value;
-                            if (data.variable.Equals("dischargeEnergyTotal"))
-                                dischargeTotal = data.value;
-                            if (data.variable.Equals("batTemperature_1"))
-                                temperature = data.value;
-                            if (data.variable.Equals("SoC_1"))
-                                batSoC = data.value;
-                            if (data.variable.Equals("gridConsumptionPower"))
-                                gridPower = data.value;
-                            if (data.variable.Equals("invBatPower_1"))
-                                invPower = data.value;
-                        
-                        }
+        
                     }
-                    if (totalEnergy > 0)
+
+
+                
+        
+
+                    
+                    if (chargeTotal + dischargeTotal > 0)
                     {
                         url = Program.urlprefix + "/aas/submodels/" + chess.id + "StateOfBatteryEntity/submodel-elements/sme-" + chess.id + "stateOfCharge/invoke/$value";
 
-                        String update = "{\"value\":" + batSoC + "}";
+                        String update = "{\"value\":" + Math.Round(100 * (chargeTotal - dischargeTotal)  / totalEnergy) + "}";
 
-                        Console.WriteLine("Updating DT - " + url + " - " + update);
-
-                        result = Post(url, update, authToken);
-
-                        Console.WriteLine(result);
-  
-                        url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
-
-                        update = "{\"value\":" + (-invPower) + "}";
-
-                        Console.WriteLine("Updating DT - " + url + " - " + update);
+                        Console.WriteLine("Updating DT - " + url + " - " +update);
 
                         result = Post(url, update, authToken);
 
+                        chess.soc =  (chargeTotal - dischargeTotal)  / totalEnergy;
+                        chess.totalEnergy = totalEnergy;
+
                         Console.WriteLine(result);
+
                         url = Program.urlprefix + "/aas/submodels/" + chess.id + "CDD/submodel-elements/sme-" + chess.id + "temperature/invoke/$value";
 
                         update = "{\"value\":" + temperature + "}";
 
-                        Console.WriteLine("Updating DT - " + url + " - " + update);
+                        Console.WriteLine("Updating DT - " + url + " - " +update);
 
                         result = Post(url, update, authToken);
 
                         Console.WriteLine(result);
 
-                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
-                        response = FoxPost("/op/v1/device/set/flag", json);
+                        url = Program.urlprefix + "/aas/submodels/" + chess.id + "telemetry/submodel-elements/sme-" + chess.id + "gridPower/invoke/$value";
 
-                        Console.WriteLine("Response " + response);
+
+                        Double powerFlow = (1 / efficiency) * 0.06 * ((chargeTotal - lastChargeTotal) - (dischargeTotal-lastDischargeTotal));
+
+                        Console.WriteLine("Updating DT Powerflow - " + url + " - " + powerFlow.ToString() + " " + (chargeTotal-lastChargeTotal).ToString());
+
+                        result = Post(url,  "{\"value\":" + powerFlow.ToString()  + "}", authToken);
+
+                        lastDischargeTotal = dischargeTotal;
+                        lastChargeTotal = chargeTotal;
+
+                        Console.WriteLine(result);
                     }
                     else
-                    {
-                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
-                        response = FoxPost("/op/v1/device/set/flag", json);
-
                         Console.WriteLine("No charge data available");
-                    }
-                }
-                catch (Exception ex) { Console.WriteLine(ex.ToString()); }
 
-                // 2 minute updates
-                Thread.Sleep(120000);
+                } catch (Exception ex) {Console.WriteLine(ex.ToString());}
+
+                // 1 minute updates
+                Thread.Sleep(60000);
             }
 
         }
@@ -681,33 +647,13 @@ public class HomeController : Controller
             if (Authorization != null)
                 authToken = Authorization;
 
-            String url = "/op/v0/device/list";
-            String json = "{\r\n  \"currentPage\": 1,\r\n  \"pageSize\": 10\r\n}";
-            String response = FoxPost(url, json);
+            Console.WriteLine("Body " + Newtonsoft.Json.JsonConvert.SerializeObject(body));
+
+            assets.Add(body);
 
 
-            DeviceListResponse? deviceListResponse = JsonConvert.DeserializeObject<DeviceListResponse>(response);
-            if (deviceListResponse != null && deviceListResponse.errno == 0)
-            {
-                foreach (DeviceData device in deviceListResponse.result.data)
-                {
+            Task.Run(() => polling(assets.Count-1));
 
-                    Console.WriteLine("Got device " + device.deviceSN);
-                    if (device.deviceSN.Equals(body.identifier))
-                    {
-
-                        Console.WriteLine("Adding device " + body.id);
-                        body.deviceData = device;
-                        assets.Add(body);
-
-                       
-                       Task.Run(() => polling(assets.Count - 1));
-                        
-                    }
-                }
-
-            }
-            else return StatusCode(404);
             return StatusCode(200);
 
         }
@@ -719,79 +665,6 @@ public class HomeController : Controller
         /// POST - Setup a schedule for the CHESS assets
         /// GET -  Get the status of assets
 
-        [HttpGet]
-        [Produces("application/json")]
-        [Consumes("application/json")]
-        [Route("status/{id}")]
-
-        public IActionResult Status([FromRoute] String id, [FromHeader] String Authorization)
-        {
-
-            // Update the stored token
-            if (Authorization != null)
-                authToken = Authorization;
-
-            if (id == null)
-            {
-                return Json(assets);
-            }
-
-
-            foreach (CHESS chess in assets)
-            {
-
-
-                Console.WriteLine("Looking for CHESS " + chess.id + " matching " + id);
-
-                if (chess.id.EndsWith(id))
-                {
-
-                    List<Status> statusList = new List<Status>();
-
-                    String json = "{\r\n\t\"deviceSN\": \"" + chess.deviceData.deviceSN + "\"\r\n}";
-
-                    String response = FoxPost("/op/v0/device/scheduler/get", json);
-                    if (response == null)
-                        return StatusCode(500);
-
-
-                    SchedulerResponse currentSchedule = JsonConvert.DeserializeObject<SchedulerResponse>(response);
-
-
-                    if (currentSchedule != null )
-                    {
-
-                        
-                        if (currentSchedule.errno == 0 && currentSchedule.result != null)
-                        {
-                           
-                                Console.WriteLine("Result schedule enable " + currentSchedule.msg);
-                                foreach (Schedule schedule in currentSchedule.result.groups)
-                                {
-
-                                    Status status = new Status();
-                                    status.starttime = schedule.startHour.ToString("00") + ":" + schedule.startMinute.ToString("00");
-                                    status.endtime = schedule.endHour.ToString("00") + ":" + schedule.endMinute.ToString("00");
-                                    status.recurrence = "daily";
-                                    status.status = schedule.workMode;
-                                   
-                                    status.capacity = (schedule.fdPwr * (schedule.endHour - schedule.startHour + 60* (schedule.endMinute - schedule.startMinute))).ToString();
-                                    status.service = schedule.enable.ToString();
-                                    statusList.Add(status);
-                                }
-                            
-                        
-                        } else Console.WriteLine("Error " + currentSchedule.errno +  " " + currentSchedule.msg);
-
-                    }
-
-
-                    return Json(statusList);
-                }
-
-            }
-            return StatusCode(404);
-        }
 
         [HttpPost]
         [Produces("application/json")]
@@ -814,104 +687,66 @@ public class HomeController : Controller
             foreach (CHESS chess in assets)
             {
 
+                Console.WriteLine("Looking for CHESS " + chess.id + " matching " + id);
+
+                if (chess.id.EndsWith(id))
+                    if (body != null)
+                    {
+
+                         // we need to update !
+                        chess.currentStatus = body.currentStatus;
+                        chess.status = body.status;
+
+                        Double maxCapacity = 0;
+                        
+                        foreach (Status status in chess.status)
+                        {
+                            if ( status.status != null && status.status.ToLower().Equals("forcedischarge") )
+                            {
+                                Double capacity = Double.Parse(status.capacity);
+                                if (capacity > maxCapacity)
+                                    maxCapacity = capacity;
+                            }
+
+                        }
+
+                        //chess.cycleCost = cycleCost( chess.soc + maxCapacity/chess.totalEnergy, chess.soc );
+                        return Json(chess);
+
+                    }
+
+            }
+            return StatusCode(404);
+        }
+
+        [HttpGet]
+        [Produces("application/json")]
+        [Consumes("application/json")]
+        [Route("status/{id}")]
+        public IActionResult Status([FromRoute] String id, [FromHeader] String Authorization)
+        {
+
+            // Update the stored token
+            if (Authorization != null)
+                authToken = Authorization;
+
+            if (id == null)
+            {
+                return Json(assets);
+            }
+
+
+            foreach (CHESS chess in assets)
+            {
 
                 Console.WriteLine("Looking for CHESS " + chess.id + " matching " + id);
 
                 if (chess.id.EndsWith(id))
-                {
-
-                    // we need to update !
-                    chess.currentStatus = body.currentStatus;
-                    chess.status = body.status;
-
-
-
-
-                    if (chess.deviceData.hasBattery) // && chess.deviceData.status == 1)
-                    {
-
-                        // now set up the schedule for the assets in the CHESS
-
-                        String json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 0\r\n}";
-                        String response = FoxPost("/op/v1/device/set/flag", json);
-
-                        Console.WriteLine("Response " + response);
-
-                        Scheduler scheduler = new Scheduler();
-
-                        scheduler.deviceSN = chess.deviceData.deviceSN;
-
-                        scheduler.groups = new Schedule[chess.status.Length];
-                        int count = 0;
-                        foreach (Status status in chess.status)
-                        {
-                            if (!status.status.Contains("available") && getStatus(status))
-                            {
-
-                                Schedule schedule = new Schedule();
-                                schedule.workMode = status.status;
-                                schedule.startHour = Int32.Parse(status.starttime.Substring(0, 2));
-                                schedule.startMinute = Int32.Parse(status.starttime.Substring(3, 2));
-                                schedule.endHour = Int32.Parse(status.endtime.Substring(0, 2));
-                                schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
-                                //schedule.extraParam = new ExtraParam();
- 
-                                var remoteTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-                         
-                                if (remoteTimeZone.IsDaylightSavingTime(DateTime.Now))
-                                {
-                                    schedule.startHour += 2;
-                                    schedule.endHour += 2;
-                                } else
-                                {
-                                    schedule.startHour += 1;
-                                    schedule.endHour += 1;
-                                }
-
-                                if (schedule.startHour > 23) schedule.startHour -= 24;
-                                if (schedule.endHour > 23) schedule.endHour -= 24;
-
-                                TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0);
-                                TimeSpan end = new TimeSpan(schedule.endHour, schedule.startMinute, 0);
-
-                                Double period = end.Subtract(start).TotalMinutes / 60;
-                                Double capacity = Double.Parse(status.capacity);
-                                
-                                schedule.fdSoc = 90;
-        
-
-                                schedule.fdPwr = (int)(capacity / period);
-                                schedule.minSocOnGrid = 10;
-                             
-                                schedule.enable = 1;
-                                schedule.minSocOnGrid = 10;
-                                schedule.maxSoc = 100;
-                                if (schedule.workMode.ToLower().Equals("forcedischarge"))
-                                    schedule.fdSoc = 10;
-                                scheduler.groups[count] = schedule;
-                                status.active = 1;
-
-                                count++;
-                            }
-                            else status.active = 0;
-
-                        }
-                  
-                        
-                        response = FoxPost("/op/v1/device/scheduler/enable", JsonConvert.SerializeObject(scheduler,Newtonsoft.Json.Formatting.Indented));
-
-                        Console.WriteLine("CHESS response " + response);
-                        
-                        json = "{\r\n  \"deviceSN\": \""+chess.deviceData.deviceSN+"\",\r\n  \"enable\": 1\r\n}";
-                        response = FoxPost("/op/v1/device/set/flag", json);
-
-                        Console.WriteLine("Response " + response);
-
-                    }
 
                     return Json(chess);
-                }
+                
             }
+
 
             return StatusCode(404);
 

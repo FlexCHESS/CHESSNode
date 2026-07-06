@@ -1,9 +1,7 @@
 /*
- * CHESS adapter for simulated HVAC/PV - using building thermal model and weather forecast
- *
+ * CHESS adapter for HVAC
  * tim@toshiba-bril.com
  */
-
 
 using hvacadapter;
 using Microsoft.AspNetCore.Mvc;
@@ -501,7 +499,7 @@ namespace hvacadapter.Controllers
                     // Use the current temperature 
                     if (weather != null) {
                         ta = weather.current.temperature_2m + 273;
-                        pvPower = (weather.hourly.global_tilted_irradiance[now.Hours] * 20);
+                        pvPower = (weather.hourly.global_tilted_irradiance[now.Hours] * 150);
                     }
                     else 
                         Console.WriteLine("Cannot get current temp");
@@ -512,16 +510,16 @@ namespace hvacadapter.Controllers
                     for (int i=0; i<3; i++)
                     {
                         if (now.Hours<8 || now.Hours>19) 
-                             temperature[i] = ta*0.04 + lastTemperature[i]*0.96;
-                        else temperature[i] = 298*0.04 + lastTemperature[i]*0.96;
+                             temperature[i] = ta*0.01 + lastTemperature[i]*0.99;
+                        else temperature[i] = 298*0.01 + lastTemperature[i]*0.99;
                         hvacPower[i] = ((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
                         if (hvacPower[i] < 0) hvacPower[i] = 0;
                         else
                             hvacPower[i] = Math.Abs(hvacPower[i]);
                        
                         if (now.Hours<8 || now.Hours>19) 
-                            simTemperature[i] = ta*0.04 + simLastTemperature[i]*0.96;
-                        else simTemperature[i] = 298*0.04 + simLastTemperature[i]*0.96;
+                            simTemperature[i] = ta*0.01 + simLastTemperature[i]*0.99;
+                        else simTemperature[i] = 298*0.01 + simLastTemperature[i]*0.99;
                         simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower )) / (khvac * beta) - 285);
  
                     }

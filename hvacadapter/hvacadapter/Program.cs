@@ -16,7 +16,7 @@ namespace hvacadapter
     public class Program
     {
 
-        public static String urlprefix = "https://preprodapim.umbrellaiot.com:9095/aas/3.0";
+        public static String urlprefix = "http://aasserver.default.svc/api/v3.0";
         public static void Main(string[] args)
         {
 

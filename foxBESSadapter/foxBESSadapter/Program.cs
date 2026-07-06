@@ -16,11 +16,7 @@ namespace foxBESSadapter
     public class Program
     {
 
-        public static string key = System.Environment.GetEnvironmentVariable("CONF", EnvironmentVariableTarget.Process);
-        public static string uudexUser = System.Environment.GetEnvironmentVariable("UUDEX_USER", EnvironmentVariableTarget.Process);
-        public static string uudexPass = System.Environment.GetEnvironmentVariable("UUDEX_PASS", EnvironmentVariableTarget.Process);
-
-        public static String urlprefix = "http://aasserver.default.svc/api/v3.0"; 
+        public static String urlprefix = "https://preprodapim.umbrellaiot.com:9095/aas/3.0";
         public static void Main(string[] args)
         {
 
