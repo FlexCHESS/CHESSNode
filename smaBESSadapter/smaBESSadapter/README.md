@@ -1,3 +1,49 @@
+# Adapter for the BESS (SMA)
+-----------------------------
+The adapter implements the CHESS adapter contract for SMA solar/battery inverters. It is an
+ASP.NET Core service (`Controllers/HomeController.cs`) that, on `/init`, runs `deploy.sh` to
+configure and launch [SBFspot](https://github.com/SBFspot/SBFspot) - a third-party tool vendored
+and built from source in this adapter's `Dockerfile` - which reads inverter data over
+Bluetooth/Ethernet and publishes it via MQTT for ingestion into the digital twin. SBFspot's own
+documentation and license are reproduced unmodified below.
+
+## Build and run
+
+Native .NET service (from within `smaBESSadapter/`):
+
+```
+dotnet build smaBESSadapter.sln
+dotnet run --project smaBESSadapter
+```
+
+Docker (from within `smaBESSadapter/`) builds both the .NET service and SBFspot (from source,
+via an Alpine build stage) together:
+
+```
+docker build -t smabessadapter:latest .
+docker run -p 5000:80 smabessadapter:latest
+```
+
+## API operations
+
+| Method | Route | Purpose |
+|--------|-------|---------|
+| POST | `/init` | Register a CHESS asset; runs `deploy.sh` to configure and start SBFspot/MQTT publishing for this asset, then starts its polling loop |
+| GET / POST | `/status/{id}` | Get / set the schedule for a registered device |
+
+## Configuration
+
+Environment variables read at startup (`Program.cs`):
+
+| Variable | Purpose |
+|----------|---------|
+| `AAS_URL` | Base URL of the AAS server used to push telemetry/status to the digital twin |
+
+`deploy.sh` configures SBFspot itself, including the storage backend (`DB_STORAGE`), polling
+interval (`SBFSPOT_INTERVAL`), and MQTT publishing (`MQTT_ENABLE`, `MQTT_PublisherArgs`, etc).
+
+---
+
 ![SBFspot Logo](https://user-images.githubusercontent.com/1931158/30831762-006ec650-a249-11e7-86e3-13d01b36dd5d.jpg)
 
 Translation by Google: [[NL](https://translate.google.com/translate?act=url&depth=1&hl=nl&ie=UTF8&prev=_t&rurl=translate.google.com&sl=en&sp=nmt4&tl=nl&u=https://github.com/SBFspot/SBFspot)] - [[FR](https://translate.google.com/translate?act=url&depth=1&hl=nl&ie=UTF8&prev=_t&rurl=translate.google.com&sl=en&sp=nmt4&tl=fr&u=https://github.com/SBFspot/SBFspot)] - [[DE](https://translate.google.com/translate?act=url&depth=1&hl=nl&ie=UTF8&prev=_t&rurl=translate.google.com&sl=en&sp=nmt4&tl=de&u=https://github.com/SBFspot/SBFspot)] - [[ES](https://translate.google.com/translate?act=url&depth=1&hl=nl&ie=UTF8&prev=_t&rurl=translate.google.com&sl=en&sp=nmt4&tl=es&u=https://github.com/SBFspot/SBFspot)] - [[IT](https://translate.google.com/translate?act=url&depth=1&hl=nl&ie=UTF8&prev=_t&rurl=translate.google.com&sl=en&sp=nmt4&tl=it&u=https://github.com/SBFspot/SBFspot)]

@@ -1,27 +1,55 @@
-# IO.Swagger - ASP.NET Core 2.0 Server
+# AAS Server
 
-All APIs of the Specification of the [Specification of the Asset Administration Shell: Part 2](http://industrialdigitaltwin.org/en/content-hub) in one collection.
-## Run
+Implements the [Asset Administration Shell: Part 2](http://industrialdigitaltwin.org/en/content-hub)
+REST API (shells, submodels, registries and repositories - see `AssetAdministrationShellAPIApi.cs`,
+`SubmodelAPIApi.cs`, `SubmodelRegistryAPIApi.cs`, `SubmodelRepositoryAPIApi.cs`), plus the
+FlexCHESS CHESS network core operations in `CHESSNetworkController.cs`: registering CHESS assets
+against the digital twin, exposing their capability/status, and running the cost-minimising
+optimiser described below. It is the central per-node service other CHESS adapters and the
+CoreAPI talk to (`http://aasserver.default.svc` inside the node's K3S cluster).
 
-Linux/OS X:
+## Build and run
+
+Native (from within this directory):
 
 ```
-sh build.sh
+sh build.sh          # Linux/macOS
+build.bat             # Windows
 ```
 
-Windows:
-
-```
-build.bat
-```
-
-## Run in Docker
+Docker:
 
 ```
 cd src/IO.Swagger
 docker build -t io.swagger .
 docker run -p 5000:5000 io.swagger
 ```
+
+## API operations
+
+In addition to the standard AAS Part 2 REST API, `CHESSNetworkController.cs` adds:
+
+| Method | Route | Purpose |
+|--------|-------|---------|
+| POST | `/register` | Register a CHESS asset (and its adapter) with the digital twin environment |
+| DELETE | `/register` | Remove a registered CHESS / CHESS adapter |
+| GET / POST | `/capability/{id}` | Get / update the capability of a registered CHESS in the digital twin |
+| GET | `/status` | Get the flexibility status profile for all registered CHESS assets |
+| GET / POST | `/status/{id}` | Get / request an update of the flexibility status profile for one CHESS asset |
+| GET / POST | `/current` | Proxy to the EMS adapter's `/current` operation, aggregated per priority level |
+| POST | `/run` | Invoke the optimiser synchronously with specified limits and objectives (per-priority-level KPI aggregation; see the `todo` noting the day-ahead scheduler below fills in the missing dispatch logic) |
+| POST | `/run/dayahead` | Day-ahead cost-minimising scheduler - see below |
+
+## Configuration
+
+Environment variables read at startup (`Program.cs`):
+
+| Variable | Purpose |
+|----------|---------|
+| `PFX_CERT_PATH` / `PFX_CERT_PASS` | Path and password for the node's TLS/UUDEX client certificate |
+| `UUDEX_USER` / `UUDEX_PASS` | Credentials for the UUDEX message bus |
+| `adtServiceUrl` | Azure Digital Twins instance URL |
+| `adtClientId` / `adtClientSecret` / `adtTenantId` | Service principal credentials for the Digital Twins instance |
 
 ## Day-ahead cost-minimising optimiser
 
