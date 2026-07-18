@@ -12,6 +12,73 @@ The CHESS node can be deployed to any cloud VM or physical server, but requires 
 
 Deployment uses a Kubernetes based  environment (such as K3S) using yaml files found in /deploy.
 
+Contents
+--------
+
+- [1.1 Prerequisite installation from scratch](#11-prerequisite-installation-from-scratch)
+  - [1.1.1 AAS server / core API Deployment](#111-aas-server--core-api-deployment)
+  - [1.1.2 Postgres for both API manager and UUDEX server](#112-postgres-for-both-api-manager-and-uudex-server)
+  - [1.1.3 RabbitMQ for UUDEX server](#113-rabbitmq-for-uudex-server)
+- [1.2 Adapter installation](#12-adapter-installation)
+- [1.3 Repository layout](#13-repository-layout)
+- [1.4 Building and running a component locally](#14-building-and-running-a-component-locally)
+- [1.5 Prerequisites checklist](#15-prerequisites-checklist)
+
+1.3 Repository layout
+----------------------
+
+| Path | Description |
+|------|-------------|
+| `/AASServer` | Asset Administration Shell (AAS) server. Implements the [AAS Part 2](http://industrialdigitaltwin.org/en/content-hub) REST API, exposing CHESS status, capabilities and submodels. ASP.NET Core (`IO.Swagger`). |
+| `/CoreAPI` | Core network API. Handles adapter `/register`, `/init`, `/status` and `/update` operations, deploys adapter containers into the node's K3S cluster, and brokers digital-twin access. ASP.NET Core (`IO.Swagger`). |
+| `/avevaadapter` | Adapter receiving HVAC/PV telemetry from an Aveva PI historian. |
+| `/emsadapter` | Energy Management System (EMS) adapter — estimates cost/priority of assets for flexibility services such as peak shaving and load shifting. |
+| `/evcsadapter` | EV Charging Station (CSMS) monitoring and control adapter. |
+| `/foxBESSadapter` | Adapter for Fox battery energy storage systems (BESS). |
+| `/huaweiBESSadapter` | Adapter for Huawei BESS, including a Modbus-to-MQTT bridge (`huawei2mqtt.py`). |
+| `/smaBESSadapter` | Adapter for SMA BESS, built on SBFspot. |
+| `/hvacadapter` | Simulated HVAC/building adapter, emulating HVAC as virtual energy storage. |
+| `/deploy` | Kubernetes/K3S manifests (`*.yaml`) for AAS Server, Core API, UUDEX, RabbitMQ and Postgres, plus an example DTDL graph (`ExportedGraph.json`) and a deployment walkthrough ([deploy/README.md](deploy/README.md)). |
+| `/doc` | Background documentation: flexibility/digital-twin concepts ([doc/Readme.md](doc/Readme.md)), the AAS Server design doc, and a digital-twin paper (PDFs). |
+
+Each adapter directory contains its own `README.md` with adapter-specific build steps and an example `/register` payload — see the links in the table above.
+
+1.4 Building and running a component locally
+----------------------------------------------
+
+Every component (`AASServer`, `CoreAPI`, and each `*adapter`) is a standalone .NET (ASP.NET Core) project generated from a Swagger/OpenAPI spec, and can be built either natively or as a Docker image.
+
+Native build (from within the component directory):
+
+```
+sh build.sh          # Linux/macOS
+build.bat             # Windows
+```
+
+This runs `dotnet restore` and `dotnet build` against `src/IO.Swagger/`, then prints the `dotnet run` command to start the project.
+
+Docker build (from within the component directory, where a `Dockerfile` is present):
+
+```
+docker build -t <component>:latest .
+docker run -p 5000:5000 <component>:latest
+```
+
+Adapters are not run standalone in production — they are deployed into a CHESS node's K3S cluster via the Core API `/register` operation (see [1.2 Adapter installation](#12-adapter-installation)), which pulls the container image named in the `Container` field of the register payload and invokes the adapter's `/init` endpoint.
+
+1.5 Prerequisites checklist
+-----------------------------
+
+Before deploying a CHESS node, the following must already be available (see [1.1 Prerequisite installation from scratch](#11-prerequisite-installation-from-scratch) for full setup steps):
+
+- A Kubernetes-compatible cluster, e.g. K3S ([1.1.1](#111-aas-server--core-api-deployment))
+- [WSO2 API Manager](https://github.com/wso2/product-apim) instance, used to issue the application key (participant ID) and auth token for the node
+- [UUDEX server](https://github.com/pnnl/UUDEX/tree/main/server), backed by:
+  - Postgres ([1.1.2](#112-postgres-for-both-api-manager-and-uudex-server))
+  - RabbitMQ, deployed via the [RabbitMQ Cluster Operator](https://www.rabbitmq.com/kubernetes/operator/install-operator) ([1.1.3](#113-rabbitmq-for-uudex-server))
+- An Azure Digital Twins instance, reachable via a service principal (`adtServiceUrl`, `adtClientId`, `adtClientSecret`, `adtTenantId`)
+- .NET SDK and Docker, for building/packaging AAS Server, Core API and adapter images locally
+
 ACKNOWLEDGEMENT
 ---------------
 
@@ -290,7 +357,7 @@ The database uudex is created for the UUDEX server.
  kubectl exec -it <postgisdb pod> -- bash
  createdb -U postgres uudex
  createuser uudex_user
- psql -u uudex_user uudex
+ psql -U uudex_user uudex
  \i /tmp/uudex_dump.sql
  alter role uudex_user with password ‘password’;
 ```
