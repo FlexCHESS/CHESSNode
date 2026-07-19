@@ -1392,22 +1392,12 @@ namespace IO.Swagger.Controllers
             //    capacity. This reuses the /current contract already used by /run - the query
             //    is shaped as an OptionIn, whose extra Objective/Option fields the EMS
             //    adapter's CHESS binder simply ignores.
-            IoT.Services.ChessStatus dischargeQuery = new IoT.Services.ChessStatus
-            {
-                status = "ForceDischarge", service = "all", starttime = "00:00", endtime = "23:59",
-                recurrence = recurrence, capacity = "1"
-            };
-            IoT.Services.ChessStatus chargeQuery = new IoT.Services.ChessStatus
-            {
-                status = "ForceCharge", service = "all", starttime = "00:00", endtime = "23:59",
-                recurrence = recurrence, capacity = "1"
-            };
-            OptionIn query = new OptionIn { objective = objective, option = option, status = new[] { dischargeQuery, chargeQuery } };
+            
 
             CHESSStatus[] css;
             try
             {
-                String chessJson = Post("http://emsadapter.default.svc/current", JsonConvert.SerializeObject(query), Authorization);
+                String chessJson = Post("http://emsadapter.default.svc/current", JsonConvert.SerializeObject(body.Options), Authorization);
                 css = JsonConvert.DeserializeObject<CHESSStatus[]>(chessJson) ?? Array.Empty<CHESSStatus>();
             }
             catch (Exception ex)
@@ -1534,7 +1524,7 @@ namespace IO.Swagger.Controllers
                     {
                         String payload = JsonConvert.SerializeObject(schedule);
                         Console.WriteLine("Dispatching day-ahead schedule to " + schedule.id + " - " + payload);
-                        Post("http://emsadapter.default.svc/status/" + schedule.id, payload, Authorization);
+                        Post("http://aasserver.default.svc/status/" + schedule.id, payload, Authorization);
                     }
                     catch (Exception ex)
                     {
@@ -1572,4 +1562,3 @@ namespace IO.Swagger.Controllers
         }
     }
 }
-
