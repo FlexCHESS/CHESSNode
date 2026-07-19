@@ -24,8 +24,8 @@ Contents
 - [1.4 Building and running a component locally](#14-building-and-running-a-component-locally)
 - [1.5 Prerequisites checklist](#15-prerequisites-checklist)
 
-1.3 Repository layout
-----------------------
+Repository layout
+------------------
 
 | Path | Description |
 |------|-------------|
@@ -43,8 +43,8 @@ Contents
 
 Each adapter directory contains its own `README.md` with adapter-specific build steps and an example `/register` payload — see the links in the table above.
 
-1.4 Building and running a component locally
-----------------------------------------------
+Building and running a component locally
+------------------------------------------
 
 Every component (`AASServer`, `CoreAPI`, and each `*adapter`) is a standalone .NET (ASP.NET Core) project generated from a Swagger/OpenAPI spec, and can be built either natively or as a Docker image.
 
@@ -66,8 +66,8 @@ docker run -p 5000:5000 <component>:latest
 
 Adapters are not run standalone in production — they are deployed into a CHESS node's K3S cluster via the Core API `/register` operation (see [1.2 Adapter installation](#12-adapter-installation)), which pulls the container image named in the `Container` field of the register payload and invokes the adapter's `/init` endpoint.
 
-1.5 Prerequisites checklist
------------------------------
+Prerequisites checklist
+-------------------------
 
 Before deploying a CHESS node, the following must already be available (see [1.1 Prerequisite installation from scratch](#11-prerequisite-installation-from-scratch) for full setup steps):
 
