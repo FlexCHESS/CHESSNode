@@ -118,7 +118,43 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
   "Tariff": [0.1111, 0.1088, 0.1088, ... ],
   "PeriodHours": 1,
   "Recurrence": "daily",
-  "Dispatch": true
+  "Dispatch": true,
+  "Options": [{
+    "identifier":"it-bess-blg1-chess1-sim",
+    "currentStatus":"available",
+    "status":[{
+      "status":"ForceCharge",
+      "service":"all",
+      "starttime":"02:00",
+      "endtime":"06:00",
+      "capacity":"112000",
+      "recurrence":"daily"
+     },
+     {
+      "status":"ForceDischarge",
+      "service":"all",
+      "starttime":"07:15",
+      "endtime":"11:15",
+      "capacity":"112000",
+      "recurrence":"daily"
+    },
+    {
+      "status":"ForceCharge",
+      "service":"all",
+      "starttime":"11:15",
+      "endtime":"13:15",
+      "capacity":"112000",
+      "recurrence":"daily"
+    },
+    {
+      "status":"ForceDischarge",
+      "service":"all",
+      "starttime":"13:15",
+      "endtime":"17:15",
+      "capacity":"112000",
+      "recurrence":"daily"
+    }]
+  }]
 }
 ```
 
