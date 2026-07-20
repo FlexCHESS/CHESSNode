@@ -82,7 +82,7 @@ Example request (24 hourly periods, a 5kW site import limit, and a day-ahead tar
   "PeriodHours": 1,
   "Recurrence": "daily",
   "Dispatch": true,
-  "Options": {
+  "Options": [{
     "currentStatus":"available",
     "status":[{
       "status":"ForceCharge",
@@ -116,7 +116,7 @@ Example request (24 hourly periods, a 5kW site import limit, and a day-ahead tar
       "capacity":"112000",
       "recurrence":"daily"
     }]
-   }
+   }]
 }
 ```
 
