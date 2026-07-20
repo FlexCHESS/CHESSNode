@@ -126,7 +126,7 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
       "service":"all",
       "starttime":"02:00",
       "endtime":"06:00",
-      "capacity":"112000",
+      "capacity":"1",
       "recurrence":"daily"
      },
      {
@@ -134,7 +134,7 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
       "service":"all",
       "starttime":"07:15",
       "endtime":"11:15",
-      "capacity":"112000",
+      "capacity":"1",
       "recurrence":"daily"
     },
     {
@@ -142,7 +142,7 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
       "service":"all",
       "starttime":"11:15",
       "endtime":"13:15",
-      "capacity":"112000",
+      "capacity":"1",
       "recurrence":"daily"
     },
     {
@@ -150,7 +150,7 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
       "service":"all",
       "starttime":"13:15",
       "endtime":"17:15",
-      "capacity":"112000",
+      "capacity":"1",
       "recurrence":"daily"
     }]
   }]
