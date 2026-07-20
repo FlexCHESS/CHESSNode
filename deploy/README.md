@@ -120,7 +120,6 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
   "Recurrence": "daily",
   "Dispatch": true,
   "Options": [{
-    "identifier":"it-bess-blg1-chess1-sim",
     "currentStatus":"available",
     "status":[{
       "status":"ForceCharge",
