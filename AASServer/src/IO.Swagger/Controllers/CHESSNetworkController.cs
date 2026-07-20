@@ -1353,6 +1353,7 @@ namespace IO.Swagger.Controllers
         /// <response code="500">Internal server error</response>
         [HttpPost]
         [Route("/run/dayahead")]
+        [Route("/opt/1.0.0/run/dayahead")]
         [Produces("application/json")]
         [Consumes("application/json")]
         [ValidateModelState]
