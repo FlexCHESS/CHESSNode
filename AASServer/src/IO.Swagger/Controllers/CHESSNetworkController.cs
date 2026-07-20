@@ -1397,7 +1397,7 @@ namespace IO.Swagger.Controllers
             CHESSStatus[] css;
             try
             {
-                String chessJson = Post("http://emsadapter.default.svc/current", JsonConvert.SerializeObject(body.Options), Authorization);
+                String chessJson = Post("http://emsadapter.default.svc/current", JsonConvert.SerializeObject(body.Options[0]), Authorization);
                 css = JsonConvert.DeserializeObject<CHESSStatus[]>(chessJson) ?? Array.Empty<CHESSStatus>();
             }
             catch (Exception ex)
