@@ -92,7 +92,42 @@ Example request (24 hourly periods, a 5kW site import limit, and a day-ahead tar
   "Tariff": [0.1111, 0.1088, 0.1088, ... ],
   "PeriodHours": 1,
   "Recurrence": "daily",
-  "Dispatch": true
+  "Dispatch": true,
+  "Options": [{
+    "currentStatus":"available",
+    "status":[{
+      "status":"ForceCharge",
+      "service":"all",
+      "starttime":"02:00",
+      "endtime":"06:00",
+      "capacity":"1",
+      "recurrence":"daily"
+     },
+     {
+      "status":"ForceDischarge",
+      "service":"all",
+      "starttime":"07:15",
+      "endtime":"11:15",
+      "capacity":"1",
+      "recurrence":"daily"
+    },
+    {
+      "status":"ForceCharge",
+      "service":"all",
+      "starttime":"11:15",
+      "endtime":"13:15",
+      "capacity":"1",
+      "recurrence":"daily"
+    },
+    {
+      "status":"ForceDischarge",
+      "service":"all",
+      "starttime":"13:15",
+      "endtime":"17:15",
+      "capacity":"1",
+      "recurrence":"daily"
+    }]
+  }]
 }
 ```
 
