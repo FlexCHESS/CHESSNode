@@ -1553,6 +1553,7 @@ namespace IO.Swagger.Controllers
                 BaselineCost = baselineCost,
                 UnservedEnergy = unserved.Sum(),
                 UnreplenishedEnergy = Math.Max(0, toReplenish),
+                PeriodHours = periodHours,
                 Periods = periodsOut,
                 Schedules = schedules.ToArray()
             };

@@ -157,6 +157,12 @@ namespace IO.Swagger
         public static String uudexUser = "";
         public static String uudexPass = "";
 
+        // Piclo Flex marketplace integration (https://docs.picloflex.com) - null when
+        // PICLO_CLIENT_ID / PICLO_API_KEY aren't configured, so PicloMarketController can
+        // report 503 rather than fail with a null reference.
+        public static IO.Swagger.Piclo.PicloClient picloClient;
+        public static String picloProviderId = "";
+
         protected static List<Subscription> uudexSubscriptions;
         public static List<Subject> uudexSubjects;
 
@@ -435,6 +441,14 @@ namespace IO.Swagger
 
             uudexUser = System.Environment.GetEnvironmentVariable("UUDEX_USER");
             uudexPass = System.Environment.GetEnvironmentVariable("UUDEX_PASS");
+
+            String picloClientId = System.Environment.GetEnvironmentVariable("PICLO_CLIENT_ID");
+            String picloApiKey = System.Environment.GetEnvironmentVariable("PICLO_API_KEY");
+            picloProviderId = System.Environment.GetEnvironmentVariable("PICLO_PROVIDER_ID") ?? "";
+            if (!String.IsNullOrEmpty(picloClientId) && !String.IsNullOrEmpty(picloApiKey))
+                picloClient = new IO.Swagger.Piclo.PicloClient(System.Environment.GetEnvironmentVariable("PICLO_BASE_URL"), picloClientId, picloApiKey);
+            else
+                Console.WriteLine("Piclo integration disabled - PICLO_CLIENT_ID / PICLO_API_KEY not set");
 
 
             X509Certificate2 cert = new X509Certificate2(path, pass);

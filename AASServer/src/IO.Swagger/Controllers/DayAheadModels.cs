@@ -54,6 +54,11 @@ namespace IO.Swagger.Controllers
         public Double BaselineCost { get; set; }
         public Double UnservedEnergy { get; set; }
         public Double UnreplenishedEnergy { get; set; }
+
+        // Duration represented by each entry in Periods, in hours - carried over from the
+        // request so downstream consumers (e.g. the Piclo bid submission endpoint) can map
+        // a period index back to a time-of-day window without recomputing it.
+        public Double PeriodHours { get; set; }
         public DayAheadPeriod[] Periods { get; set; }
         public CHESSStatus[] Schedules { get; set; }
     }
