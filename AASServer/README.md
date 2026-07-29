@@ -40,6 +40,14 @@ In addition to the standard AAS Part 2 REST API, `CHESSNetworkController.cs` add
 | POST | `/run` | Invoke the optimiser synchronously with specified limits and objectives (per-priority-level KPI aggregation; see the `todo` noting the day-ahead scheduler below fills in the missing dispatch logic) |
 | POST | `/run/dayahead` | Day-ahead cost-minimising scheduler - see below |
 
+`PicloMarketController.cs` adds a [Piclo Flex marketplace](https://docs.picloflex.com) integration - see below:
+
+| Method | Route | Purpose |
+|--------|-------|---------|
+| POST | `/piclo/assets` | Register/update local CHESS as Piclo Flex Assets |
+| POST | `/piclo/planned-assets` | Register planned (not-yet-built) CHESS capacity as Piclo Planned Assets |
+| POST | `/piclo/bids` | Submit Piclo bid ballots derived from a day-ahead schedule |
+
 ## Configuration
 
 Environment variables read at startup (`Program.cs`):
@@ -50,6 +58,9 @@ Environment variables read at startup (`Program.cs`):
 | `UUDEX_USER` / `UUDEX_PASS` | Credentials for the UUDEX message bus |
 | `adtServiceUrl` | Azure Digital Twins instance URL |
 | `adtClientId` / `adtClientSecret` / `adtTenantId` | Service principal credentials for the Digital Twins instance |
+| `PICLO_CLIENT_ID` / `PICLO_API_KEY` | Piclo Flex machine user credentials (see below); the `/piclo/*` operations return 503 while unset |
+| `PICLO_PROVIDER_ID` | Piclo Flex Provider ID, used to default the `provider` field on assets/planned assets when not supplied in the request |
+| `PICLO_BASE_URL` | Overrides the Piclo API base URL (default `https://api.picloflex.com`) - e.g. to target Piclo's Experience/sandbox environment |
 
 ## Day-ahead cost-minimising optimiser
 
@@ -81,45 +92,49 @@ Example request (24 hourly periods, a 5kW site import limit, and a day-ahead tar
   "Tariff": [0.1111, 0.1088, 0.1088, ... ],
   "PeriodHours": 1,
   "Recurrence": "daily",
-  "Dispatch": true,
-  "Options": [{
-    "currentStatus":"available",
-    "status":[{
-      "status":"ForceCharge",
-      "service":"all",
-      "starttime":"02:00",
-      "endtime":"06:00",
-      "capacity":"1",
-      "recurrence":"daily"
-     },
-     {
-      "status":"ForceDischarge",
-      "service":"all",
-      "starttime":"07:15",
-      "endtime":"11:15",
-      "capacity":"1",
-      "recurrence":"daily"
-    },
-    {
-      "status":"ForceCharge",
-      "service":"all",
-      "starttime":"11:15",
-      "endtime":"13:15",
-      "capacity":"1",
-      "recurrence":"daily"
-    },
-    {
-      "status":"ForceDischarge",
-      "service":"all",
-      "starttime":"13:15",
-      "endtime":"17:15",
-      "capacity":"1",
-      "recurrence":"daily"
-    }]
-  }]
+  "Dispatch": true
 }
 ```
 
 The response reports the predicted total cost against a no-flexibility baseline cost, a
 per-period breakdown (forecast demand, resulting grid import, tariff, cost, and any demand left
 unserved by available capacity), and the concrete per-CHESS schedules that were dispatched.
+
+## Piclo Flex marketplace integration
+
+`PicloMarketController.cs` integrates with the [Piclo Flex marketplace API](https://docs.picloflex.com)
+(`IO.Swagger.Piclo.PicloClient`), so CHESS flexibility can be registered and bid into Piclo's
+flexibility competitions. Piclo authentication (`client_id`/`api_key` -> Bearer JWT, per
+`POST /authtoken/v1/`) is handled transparently by `PicloClient`, which caches and renews the
+token from `PICLO_CLIENT_ID`/`PICLO_API_KEY`.
+
+* `POST /piclo/assets` creates or updates Piclo Flex Assets (`/assets/v1/`), one per request
+  entry. An entry may reference a locally registered CHESS via `ChessId`, which is only used to
+  confirm the CHESS is real and default `Status` to `"operational"` - all other Piclo fields
+  (location, meter ids, MW capacities, technology classification, etc.) must be supplied
+  explicitly, since Piclo's asset taxonomy and power ratings don't map from the CHESS digital
+  twin's Wh-based flexibility model. Piclo has no upsert-by-ref operation, so the controller
+  looks the `ref` up first (`GET /assets/v1/?ref=`) and creates or `PATCH`es accordingly.
+* `POST /piclo/planned-assets` creates Piclo Planned Assets (`/planned-assets/v1/`) for CHESS
+  capacity that hasn't been built yet - each entry is passed through as supplied, since Planned
+  Assets have no live telemetry to enrich from.
+* `POST /piclo/bids` submits bid ballots (`POST /bids/v1/competitions/{competitionId}/ballots/`)
+  derived from a day-ahead schedule - typically the `DayAheadResult` returned by a prior
+  `POST /run/dayahead` call (dispatched or not). The request supplies the Piclo Service Windows
+  to bid into, each with the `[StartHour, EndHour)` slice of the day it covers:
+
+  ```json
+  {
+    "DayAhead": { "...": "a DayAheadResult, e.g. from POST /run/dayahead" },
+    "ServiceWindows": [
+      { "CompetitionId": "z8mpC6x", "ServiceWindowId": "sW12gWx", "RateType": "utilisation", "StartHour": 16, "EndHour": 19 }
+    ]
+  }
+  ```
+
+  For each window, capacity is the average flexibility delivered (forecast demand minus
+  resulting grid import) over that slice, in MW; unless `RateValue` overrides it, the offered
+  rate (£/MW/h) is derived from the slice's average day-ahead tariff, times `MarginMultiplier`
+  (default `1`, i.e. bid at cost). Windows with no capacity to offer are skipped rather than
+  submitted as zero-capacity bids. One Ballot is submitted per distinct `CompetitionId`,
+  covering all of that competition's (non-skipped) Service Window bids.
