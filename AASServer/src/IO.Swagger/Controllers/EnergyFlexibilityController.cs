@@ -123,6 +123,7 @@ namespace IO.Swagger.Controllers
         /// <response code="500">Internal server error</response>
         [HttpPost]
         [Route("/run/dayahead/flexibility")]
+        [Route("/opt/1.0.0/run/dayahead/flexibility")]
         [Produces("application/json")]
         [Consumes("application/json")]
         [ValidateModelState]
@@ -428,6 +429,7 @@ namespace IO.Swagger.Controllers
         /// <response code="401">Unauthorized</response>
         [HttpPost]
         [Route("/run/dayahead/flexibility/measures")]
+        [Route("/opt/1.0.0/run/dayahead/flexibility/measures")]
         [Produces("application/json")]
         [Consumes("application/json")]
         [ValidateModelState]
