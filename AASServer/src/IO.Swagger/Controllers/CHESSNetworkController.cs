@@ -56,7 +56,7 @@ namespace IO.Swagger.Controllers
 
 
     [ApiController]
-    public class CHESSNetworkController : Controller
+    public partial class CHESSNetworkController : Controller
     {
 
         // CHESS registration object
@@ -1284,6 +1284,11 @@ namespace IO.Swagger.Controllers
             public Double Remaining;
             public Double CostPerWh;
             public Double Used;
+            // Period range (inclusive) within which this resource may be allocated - defaults to
+            // the whole horizon. Used by the EFDM-sourced day-ahead endpoint to honour a Flexible
+            // Load's validity window; unused (i.e. always the full horizon) for EMS-sourced resources.
+            public Int32 EligibleStart = 0;
+            public Int32 EligibleEnd = Int32.MaxValue;
             public List<(Int32 Period, Double Wh)> Allocations = new List<(Int32, Double)>();
         }
 
@@ -1328,6 +1333,124 @@ namespace IO.Swagger.Controllers
             Int32 mm = (Int32)Math.Round((hour - hh) * 60);
             if (mm == 60) { mm = 0; hh += 1; }
             return hh.ToString("00") + ":" + mm.ToString("00");
+        }
+
+        // Shave every period where forecast demand exceeds the limit using the cheapest eligible
+        // discharge resource first, then replenish the energy used during the cheapest-tariff
+        // periods that still have headroom under the limit, using the cheapest eligible charge
+        // resource first. Mutates each resource's Remaining/Used/Allocations in place so the
+        // caller can turn them into a concrete per-asset schedule afterwards.
+        private (Double[] GridImport, Double[] Unserved, Double TotalCost, Double BaselineCost, Double ToReplenish) AllocateDayAhead(
+            Double[] demand, Double[] tariff, Double periodHours, Double limit,
+            List<FlexResource> dischargeResources, List<FlexResource> chargeResources)
+        {
+            Int32 periods = demand.Length;
+            Double[] gridImport = new Double[periods];
+            Double[] unserved = new Double[periods];
+            Double[] chargedThisPeriod = new Double[periods];
+            Double totalCost = 0;
+            Double baselineCost = 0;
+
+            for (Int32 t = 0; t < periods; t++)
+            {
+                Double baselineWh = demand[t] * periodHours;
+                baselineCost += tariff[t] / 1000.0 * baselineWh;
+
+                Double deficitWh = Math.Max(0, demand[t] - limit) * periodHours;
+                Double servedWh = 0;
+                foreach (FlexResource r in dischargeResources)
+                {
+                    if (deficitWh <= 0) break;
+                    if (r.Remaining <= 0 || t < r.EligibleStart || t > r.EligibleEnd) continue;
+                    Double use = Math.Min(deficitWh, r.Remaining);
+                    r.Remaining -= use;
+                    r.Used += use;
+                    r.Allocations.Add((t, use));
+                    deficitWh -= use;
+                    servedWh += use;
+                    totalCost += use * r.CostPerWh;
+                }
+
+                Double importWh = baselineWh - servedWh;
+                gridImport[t] = importWh;
+                unserved[t] = Math.Max(0, importWh - limit * periodHours);
+                totalCost += tariff[t] / 1000.0 * importWh;
+            }
+
+            Double toReplenish = dischargeResources.Sum(r => r.Used);
+            IEnumerable<Int32> cheapestPeriodsFirst = Enumerable.Range(0, periods)
+                .Where(t => demand[t] < limit)
+                .OrderBy(t => tariff[t]);
+
+            foreach (Int32 t in cheapestPeriodsFirst)
+            {
+                if (toReplenish <= 0) break;
+                Double headroomWh = (limit - demand[t]) * periodHours - chargedThisPeriod[t];
+                foreach (FlexResource r in chargeResources)
+                {
+                    if (toReplenish <= 0 || headroomWh <= 0) break;
+                    if (r.Remaining <= 0 || t < r.EligibleStart || t > r.EligibleEnd) continue;
+                    Double use = new[] { headroomWh, r.Remaining, toReplenish }.Min();
+                    r.Remaining -= use;
+                    r.Used += use;
+                    r.Allocations.Add((t, use));
+                    headroomWh -= use;
+                    toReplenish -= use;
+                    chargedThisPeriod[t] += use;
+                    gridImport[t] += use;
+                    totalCost += use * r.CostPerWh;
+                    totalCost += tariff[t] / 1000.0 * use;
+                }
+            }
+
+            return (gridImport, unserved, totalCost, baselineCost, toReplenish);
+        }
+
+        // Build the concrete per-CHESS schedule from a resource's allocations, merging
+        // consecutive periods allocated to the same resource into a single window.
+        private List<CHESSStatus> BuildSchedules(IEnumerable<FlexResource> resources, Double periodHours, String recurrence)
+        {
+            List<CHESSStatus> schedules = new List<CHESSStatus>();
+            foreach (FlexResource r in resources)
+            {
+                if (r.Used <= 0) continue;
+                r.Allocations.Sort((a, b) => a.Period.CompareTo(b.Period));
+
+                List<IoT.Services.ChessStatus> windows = new List<IoT.Services.ChessStatus>();
+                Int32 runStart = r.Allocations[0].Period;
+                Int32 runEnd = runStart;
+                Double runWh = r.Allocations[0].Wh;
+                for (Int32 i = 1; i < r.Allocations.Count; i++)
+                {
+                    var a = r.Allocations[i];
+                    if (a.Period == runEnd + 1) { runEnd = a.Period; runWh += a.Wh; continue; }
+                    windows.Add(BuildWindow(r.Entry, runStart, runEnd, runWh, periodHours, recurrence));
+                    runStart = a.Period; runEnd = a.Period; runWh = a.Wh;
+                }
+                windows.Add(BuildWindow(r.Entry, runStart, runEnd, runWh, periodHours, recurrence));
+
+                schedules.Add(new CHESSStatus { identifier = r.ChessId, id = r.ChessId, status = windows.ToArray() });
+            }
+            return schedules;
+        }
+
+        // Dispatch a computed schedule to each affected CHESS via the EMS adapter's
+        // /status/{id} operation.
+        private void DispatchSchedules(IEnumerable<CHESSStatus> schedules, String Authorization)
+        {
+            foreach (CHESSStatus schedule in schedules)
+            {
+                try
+                {
+                    String payload = JsonConvert.SerializeObject(schedule);
+                    Console.WriteLine("Dispatching day-ahead schedule to " + schedule.id + " - " + payload);
+                    Post("http://aasserver.default.svc/status/" + schedule.id, payload, Authorization);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error dispatching day-ahead schedule to " + schedule.id + " - " + ex.ToString());
+                }
+            }
         }
 
         /// <summary>
@@ -1430,108 +1553,18 @@ namespace IO.Swagger.Controllers
             dischargeResources = dischargeResources.OrderBy(r => r.CostPerWh).ToList();
             chargeResources = chargeResources.OrderBy(r => r.CostPerWh).ToList();
 
-            // 3) Phase 1 - shave every period where forecast demand exceeds the limit, using
-            //    the cheapest available discharge capacity first.
-            Double[] gridImport = new Double[periods];
-            Double[] unserved = new Double[periods];
-            Double[] chargedThisPeriod = new Double[periods];
-            Double totalCost = 0;
-            Double baselineCost = 0;
+            // 3) Shave every period where forecast demand exceeds the limit using the cheapest
+            //    available discharge capacity first, then replenish the energy used during the
+            //    cheapest-tariff periods that still have headroom under the limit.
+            var allocation = AllocateDayAhead(body.Demand, body.Tariff, periodHours, limit, dischargeResources, chargeResources);
 
-            for (Int32 t = 0; t < periods; t++)
-            {
-                Double baselineWh = body.Demand[t] * periodHours;
-                baselineCost += body.Tariff[t] / 1000.0 * baselineWh;
-
-                Double deficitWh = Math.Max(0, body.Demand[t] - limit) * periodHours;
-                Double servedWh = 0;
-                foreach (FlexResource r in dischargeResources)
-                {
-                    if (deficitWh <= 0) break;
-                    if (r.Remaining <= 0) continue;
-                    Double use = Math.Min(deficitWh, r.Remaining);
-                    r.Remaining -= use;
-                    r.Used += use;
-                    r.Allocations.Add((t, use));
-                    deficitWh -= use;
-                    servedWh += use;
-                    totalCost += use * r.CostPerWh;
-                }
-
-                Double importWh = baselineWh - servedWh;
-                gridImport[t] = importWh;
-                unserved[t] = Math.Max(0, importWh - limit * periodHours);
-                totalCost += body.Tariff[t] / 1000.0 * importWh;
-            }
-
-            // 4) Phase 2 - replenish the energy discharged above, preferring the
-            //    cheapest-tariff periods that still have headroom under the limit, and the
-            //    cheapest charge capacity.
-            Double toReplenish = dischargeResources.Sum(r => r.Used);
-            IEnumerable<Int32> cheapestPeriodsFirst = Enumerable.Range(0, periods)
-                .Where(t => body.Demand[t] < limit)
-                .OrderBy(t => body.Tariff[t]);
-
-            foreach (Int32 t in cheapestPeriodsFirst)
-            {
-                if (toReplenish <= 0) break;
-                Double headroomWh = (limit - body.Demand[t]) * periodHours - chargedThisPeriod[t];
-                foreach (FlexResource r in chargeResources)
-                {
-                    if (toReplenish <= 0 || headroomWh <= 0) break;
-                    if (r.Remaining <= 0) continue;
-                    Double use = new[] { headroomWh, r.Remaining, toReplenish }.Min();
-                    r.Remaining -= use;
-                    r.Used += use;
-                    r.Allocations.Add((t, use));
-                    headroomWh -= use;
-                    toReplenish -= use;
-                    chargedThisPeriod[t] += use;
-                    gridImport[t] += use;
-                    totalCost += use * r.CostPerWh;
-                    totalCost += body.Tariff[t] / 1000.0 * use;
-                }
-            }
-
-            // 5) Build the concrete per-CHESS schedule from the allocations above, merging
+            // 4) Build the concrete per-CHESS schedule from the allocations above, merging
             //    consecutive periods allocated to the same resource into a single window.
-            List<CHESSStatus> schedules = new List<CHESSStatus>();
-            foreach (FlexResource r in dischargeResources.Concat(chargeResources))
-            {
-                if (r.Used <= 0) continue;
-                r.Allocations.Sort((a, b) => a.Period.CompareTo(b.Period));
+            List<CHESSStatus> schedules = BuildSchedules(dischargeResources.Concat(chargeResources), periodHours, recurrence);
 
-                List<IoT.Services.ChessStatus> windows = new List<IoT.Services.ChessStatus>();
-                Int32 runStart = r.Allocations[0].Period;
-                Int32 runEnd = runStart;
-                Double runWh = r.Allocations[0].Wh;
-                for (Int32 i = 1; i < r.Allocations.Count; i++)
-                {
-                    var a = r.Allocations[i];
-                    if (a.Period == runEnd + 1) { runEnd = a.Period; runWh += a.Wh; continue; }
-                    windows.Add(BuildWindow(r.Entry, runStart, runEnd, runWh, periodHours, recurrence));
-                    runStart = a.Period; runEnd = a.Period; runWh = a.Wh;
-                }
-                windows.Add(BuildWindow(r.Entry, runStart, runEnd, runWh, periodHours, recurrence));
-
-                schedules.Add(new CHESSStatus { identifier = r.ChessId, id = r.ChessId, status = windows.ToArray() });
-            }
-
-            // 6) Dispatch the resulting schedule to each CHESS via the EMS adapter.
+            // 5) Dispatch the resulting schedule to each CHESS via the EMS adapter.
             if (body.Dispatch)
-                foreach (CHESSStatus schedule in schedules)
-                {
-                    try
-                    {
-                        String payload = JsonConvert.SerializeObject(schedule);
-                        Console.WriteLine("Dispatching day-ahead schedule to " + schedule.id + " - " + payload);
-                        Post("http://aasserver.default.svc/status/" + schedule.id, payload, Authorization);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error dispatching day-ahead schedule to " + schedule.id + " - " + ex.ToString());
-                    }
-                }
+                DispatchSchedules(schedules, Authorization);
 
             DayAheadPeriod[] periodsOut = new DayAheadPeriod[periods];
             for (Int32 t = 0; t < periods; t++)
@@ -1539,26 +1572,26 @@ namespace IO.Swagger.Controllers
                 {
                     Period = t,
                     Demand = body.Demand[t],
-                    GridImport = gridImport[t] / periodHours,
-                    Unserved = unserved[t] / periodHours,
+                    GridImport = allocation.GridImport[t] / periodHours,
+                    Unserved = allocation.Unserved[t] / periodHours,
                     Tariff = body.Tariff[t],
-                    Cost = body.Tariff[t] / 1000.0 * gridImport[t]
+                    Cost = body.Tariff[t] / 1000.0 * allocation.GridImport[t]
                 };
 
             DayAheadResult resultOut = new DayAheadResult
             {
                 Objective = objective,
                 Limit = limit,
-                PredictedCost = totalCost,
-                BaselineCost = baselineCost,
-                UnservedEnergy = unserved.Sum(),
-                UnreplenishedEnergy = Math.Max(0, toReplenish),
+                PredictedCost = allocation.TotalCost,
+                BaselineCost = allocation.BaselineCost,
+                UnservedEnergy = allocation.Unserved.Sum(),
+                UnreplenishedEnergy = Math.Max(0, allocation.ToReplenish),
                 PeriodHours = periodHours,
                 Periods = periodsOut,
                 Schedules = schedules.ToArray()
             };
 
-            Console.WriteLine("Day-ahead schedule computed - predicted cost " + totalCost + " vs baseline " + baselineCost);
+            Console.WriteLine("Day-ahead schedule computed - predicted cost " + allocation.TotalCost + " vs baseline " + allocation.BaselineCost);
 
             return Json(resultOut);
         }
