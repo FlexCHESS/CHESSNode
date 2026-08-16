@@ -39,6 +39,8 @@ In addition to the standard AAS Part 2 REST API, `CHESSNetworkController.cs` add
 | GET / POST | `/current` | Proxy to the EMS adapter's `/current` operation, aggregated per priority level |
 | POST | `/run` | Invoke the optimiser synchronously with specified limits and objectives (per-priority-level KPI aggregation; see the `todo` noting the day-ahead scheduler below fills in the missing dispatch logic) |
 | POST | `/run/dayahead` | Day-ahead cost-minimising scheduler - see below |
+| POST | `/run/dayahead/flexibility` | Day-ahead scheduler sourced from an Energy Flexibility Data Model (EFDM) instance instead of live EMS adapter capacity - see below |
+| POST | `/run/dayahead/flexibility/measures` | Express a computed day-ahead schedule as an EFDM `flexibleLoadMeasuresPackage` instance - see below |
 
 `PicloMarketController.cs` adds a [Piclo Flex marketplace](https://docs.picloflex.com) integration - see below:
 
@@ -134,6 +136,84 @@ Example request (24 hourly periods, a 5kW site import limit, and a day-ahead tar
 The response reports the predicted total cost against a no-flexibility baseline cost, a
 per-period breakdown (forecast demand, resulting grid import, tariff, cost, and any demand left
 unserved by available capacity), and the concrete per-CHESS schedules that were dispatched.
+## Energy Flexibility Data Model (EFDM) sourced day-ahead scheduler
+
+`POST /run/dayahead/flexibility` (`CHESSNetworkController.runDayAheadFlexibilityPost`) computes
+the same kind of day-ahead schedule as `/run/dayahead` above (same shave-then-replenish
+allocation, same `DayAheadResult` response shape, same EMS adapter dispatch), but instead of
+querying the EMS adapter's `/current` operation for live capacity, it derives each asset's
+available flexibility from an [IDTA Energy Flexibility Data Model](https://industrialdigitaltwin.org/)
+(EFDM) submodel instance supplied in the request body's `FlexibilitySubmodel` field - see
+`EnergyFlexibilityDataModel.json` at the repo root for the template this instance should conform
+to. `FlexibilitySubmodel` accepts either a bare `Submodel` object or a full AAS environment export
+(`{ assetAdministrationShells, submodels, conceptDescriptions }`), in which case the first
+submodel carrying a `flexibilitySpace_*` element is used.
+
+For each `flexibleLoad` in the submodel's `flexibilitySpace_operationalPotential` (falling back to
+`flexibilitySpace_applicationTailoredPotential`, then `flexibilitySpace_generalTechnicalPotential`
+if the preferred one isn't present):
+
+* its `powerStates` (a power range times a duration) are summed into discharge capacity
+  (negative power) and/or charge capacity (positive power), in Wh;
+* it's priced from `flexibleLoadCosts.variableCost`, following the same currency/kWh convention
+  as `Tariff`;
+* it's only eligible for the periods that fall inside its `validity.from`/`until` window, resolved
+  against the request's `PlanStart` (default: today) - both are compared in UTC, so eligibility
+  doesn't depend on the server's local timezone.
+
+Storages and dependencies described in the EFDM instance are not yet incorporated into the
+allocation.
+
+Example request (one Flexible Load offering 2kW/4h of discharge capacity, priced at £0.05/kWh,
+available all day):
+
+```json
+{
+  "FlexibilitySubmodel": {
+    "submodelElements": [{
+      "idShort": "flexibilitySpace_operationalPotential",
+      "value": [{
+        "idShort": "flexibleLoads",
+        "value": [{
+          "idShort": "flexibleLoad",
+          "value": [
+            { "idShort": "flexibleLoadId", "value": "battery-1" },
+            { "idShort": "validity", "value": [
+              { "idShort": "from", "value": "2026-08-16T00:00:00Z" },
+              { "idShort": "until", "value": "2026-08-17T00:00:00Z" }
+            ]},
+            { "idShort": "powerStates", "value": [{
+              "idShort": "powerState",
+              "value": [
+                { "idShort": "power", "min": "-2000", "max": "0" },
+                { "idShort": "duration", "min": "4", "max": "4" }
+              ]
+            }]},
+            { "idShort": "flexibleLoadCosts", "value": [
+              { "idShort": "variableCost", "value": "0.05" }
+            ]}
+          ]
+        }]
+      }]
+    }]
+  },
+  "Limits": [{ "Name": "maxpower", "Unit": "W", "Value": 5000 }],
+  "Demand": [3200, 3000, 2900, ... ],
+  "Tariff": [0.1111, 0.1088, 0.1088, ... ],
+  "PeriodHours": 1,
+  "Recurrence": "daily",
+  "Dispatch": true
+}
+```
+
+`POST /run/dayahead/flexibility/measures` (`CHESSNetworkController.runDayAheadFlexibilityMeasuresPost`)
+takes a `DayAheadResult` - typically returned by a prior `/run/dayahead` or
+`/run/dayahead/flexibility` call - and re-expresses its `Schedules` as an EFDM
+`flexibleLoadMeasuresPackage` instance: one `flexibleLoadMeasure` per scheduled asset, whose
+`loadChangeProfile` traces the signed power (negative for discharge/demand-reduction, positive for
+charge/demand-increase) at the start and end of each scheduled window. This lets a schedule
+computed here be handed off to, or filed alongside, other EFDM-speaking systems in the data model
+they expect.
 
 ## Piclo Flex marketplace integration
 
