@@ -389,16 +389,16 @@ namespace IO.Swagger.Controllers
 
 
         // Estimate cycle cost using empirical degradation model
-        protected Double cycleCost(Double SocMax, Double SocMin, String batteryType)
+        protected Double cycleCost(Double SocMax, Double SocMin, String batteryType, Double crate)
         {
             Console.WriteLine("Soc max " + SocMax + " Soc min " + SocMin + " type " + batteryType);
             Double res = 0;
 
-            Double[] N1  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};     // This is the degradation model which we will estimate
+            Double[] N1  = {10000,9400,8800,8200,7600,7000,6400,5800,5200,4600};     // This is the degradation model which we will estimate
             Double[] N2  = {10000,9500,9000,8500,8000,7500,7000,6500,6000,5500};     // This is the degradation model which we will estimate
-            Double[] N3  = {10000,9750,9500,9250,9000,8750,8500,8250,8000,7750};     // This is the degradation model which we will estimate
+            Double[] N3  = {15000,14750,14500,14250,14000,13750,13500,13250,13000,12750};     // This is the degradation model which we will estimate
             
-            int i = (int)( (SocMax - SocMin) * 10 );
+            int i = (int)( crate * 10 );
         
             if (batteryType.ToLower().Equals("li-ion"))  
                 res = (9460/28.2) / (2 * N1[i] * (SocMax - SocMin));
@@ -410,16 +410,16 @@ namespace IO.Swagger.Controllers
         }
          
         // Estimate cycle carbon using empirical  model using https://www.sciencedirect.com/science/article/pii/S0959652624011739
-        protected Double cycleCarbon(Double SocMax, Double SocMin, String batteryType)
+        protected Double cycleCarbon(Double SocMax, Double SocMin, String batteryType, Double crate)
         {
             Console.WriteLine("Soc max " + SocMax + " Soc min " + SocMin + " type " + batteryType);
             Double res = 0;
-
-            Double[] N1  = {10000,9000,8000,7000,6000,5000,4000,3000,2000,1000};     // This is the degradation model which we will estimate
+   
+            Double[] N1  = {10000,9400,8800,8200,7600,7000,6400,5800,5200,4600};     // This is the degradation model which we will estimate
             Double[] N2  = {10000,9500,9000,8500,8000,7500,7000,6500,6000,5500};     // This is the degradation model which we will estimate
-            Double[] N3  = {10000,9750,9500,9250,9000,8750,8500,8250,8000,7750};     // This is the degradation model which we will estimate
-            
-            int i = (int)( (SocMax - SocMin) * 10 );
+            Double[] N3  = {15000,14750,14500,14250,14000,13750,13500,13250,13000,12750};     // This is the degradation model which we will estimate
+               
+            int i = (int)( crate * 10 );
         
             if (batteryType.ToLower().Equals("li-ion"))  
                 res = (60000) / (2 * N1[i] * (SocMax - SocMin));
@@ -1140,8 +1140,8 @@ namespace IO.Swagger.Controllers
                                                     
                                                     }
                                   ;
-                                                    currentStatus.cycleCost =  cycleCost( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType );
-                                                    currentStatus.cycleCarbon =  cycleCarbon( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType );
+                                                    currentStatus.cycleCost =  cycleCost( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType, (60*availableCapacity/(end-start).TotalMinutes)/maxEnergy );
+                                                    currentStatus.cycleCarbon =  cycleCarbon( currentStatus.capacityMax/maxEnergy, thisCapacity/maxEnergy, batteryType, (60*availableCapacity/(end-start).TotalMinutes)/maxEnergy );
                                                     currentStatus.cycleCostUnit = "€/kWh";
                                                     currentStatus.cycleCarbonUnit = "g/kWh";
 
