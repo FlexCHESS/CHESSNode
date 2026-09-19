@@ -123,7 +123,6 @@ namespace IO.Swagger.Controllers
         /// <response code="500">Internal server error</response>
         [HttpPost]
         [Route("/run/dayahead/flexibility")]
-        [Route("/opt/1.0.0/run/dayahead/flexibility")]
         [Produces("application/json")]
         [Consumes("application/json")]
         [ValidateModelState]
@@ -224,7 +223,7 @@ namespace IO.Swagger.Controllers
                     dischargeResources.Add(new FlexResource
                     {
                         ChessId = loadId,
-                        Entry = new IoT.Services.ChessStatus { status = "ForceDischarge", capacity=dischargeWh.ToString(), service = loadId, starttime = eligibleStart.ToString("00")+":00", endtime = eligibleEnd.ToString("00")+":00", recurrence = recurrence, cycleCost = variableCostPerKwh, cycleCostUnit = "currency/kWh" },
+                        Entry = new IoT.Services.ChessStatus { status = "ForceDischarge", service = loadId, starttime = "00:00", endtime = "23:59", recurrence = recurrence, cycleCost = variableCostPerKwh, cycleCostUnit = "currency/kWh" },
                         IsDischarge = true,
                         Remaining = dischargeWh,
                         CostPerWh = costPerWh,
@@ -236,7 +235,7 @@ namespace IO.Swagger.Controllers
                     chargeResources.Add(new FlexResource
                     {
                         ChessId = loadId,
-                        Entry = new IoT.Services.ChessStatus { status = "ForceCharge", capacity=chargeWh.ToString(), service = loadId, starttime = eligibleStart.ToString("00")+":00", endtime = eligibleEnd.ToString("00")+":00", recurrence = recurrence, cycleCost = variableCostPerKwh, cycleCostUnit = "currency/kWh" },
+                        Entry = new IoT.Services.ChessStatus { status = "ForceCharge", service = loadId, starttime = "00:00", endtime = "23:59", recurrence = recurrence, cycleCost = variableCostPerKwh, cycleCostUnit = "currency/kWh" },
                         IsDischarge = false,
                         Remaining = chargeWh,
                         CostPerWh = costPerWh,
@@ -429,7 +428,6 @@ namespace IO.Swagger.Controllers
         /// <response code="401">Unauthorized</response>
         [HttpPost]
         [Route("/run/dayahead/flexibility/measures")]
-        [Route("/opt/1.0.0/run/dayahead/flexibility/measures")]
         [Produces("application/json")]
         [Consumes("application/json")]
         [ValidateModelState]

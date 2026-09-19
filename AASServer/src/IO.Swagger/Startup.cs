@@ -111,10 +111,7 @@ namespace IO.Swagger
                     {
                         Url = "https://preprodapim.umbrellaiot.com:9095"
                     });
-                    c.AddServer(new OpenApiServer()
-                    {
-                        Url = "https://chessapim.umbrellaiot.com"
-                    });
+
                     
                     c.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
                     {
@@ -145,8 +142,11 @@ namespace IO.Swagger
         {
             app.UseRouting();
 
-            //TODO: Uncomment this if you need wwwroot folder
-            // app.UseStaticFiles();
+            // Serves the CHESS Flexibility Dashboard (web/chess-dashboard) from
+            // wwwroot/dashboard, published there by the Dockerfile's web-build
+            // stage 
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             app.UseAuthorization();
 

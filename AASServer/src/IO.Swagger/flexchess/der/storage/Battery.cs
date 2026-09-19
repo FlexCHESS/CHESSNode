@@ -7,9 +7,9 @@ namespace IoT.Services
     using System.Runtime.Serialization;
     using System.Text.Json.Serialization;
 
-    public class measurement : Storage, IEquatable<measurement>
+    public class Battery : Storage, IEquatable<Battery>
     {
-        public measurement()
+        public Battery()
         {
             Metadata.ModelId = ModelId;
         }
@@ -17,20 +17,20 @@ namespace IoT.Services
         public static new string ModelId { get; } = "dtmi:com:flexchess:der:storage:battery;1";
         public override bool Equals(object? obj)
         {
-            return Equals(obj as measurement);
+            return Equals(obj as Battery);
         }
 
-        public bool Equals(measurement? other)
+        public bool Equals(Battery? other)
         {
             return other is not null && base.Equals(other);
         }
 
-        public static bool operator ==(measurement? left, measurement? right)
+        public static bool operator ==(Battery? left, Battery? right)
         {
-            return EqualityComparer<measurement?>.Default.Equals(left, right);
+            return EqualityComparer<Battery?>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(measurement? left, measurement? right)
+        public static bool operator !=(Battery? left, Battery? right)
         {
             return !(left == right);
         }

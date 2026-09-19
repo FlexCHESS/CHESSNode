@@ -79,5 +79,4 @@ namespace IoT.Services
             return Equals(other as ChessStatus) || new TwinEqualityComparer().Equals(this, other);
         }
     }
-
 }

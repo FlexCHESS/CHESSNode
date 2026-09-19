@@ -53,10 +53,10 @@ namespace IoT.Functions
             CAL.requestNotify("SELECT * from public.real_measure order by id; archive=1", 0, 0);
 
 
-            string _adtServiceUrl = Environment.GetEnvironmentVariable("adtServiceUrl", EnvironmentVariableTarget.Process);
+            string _adtServiceUrl =  Environment.GetEnvironmentVariable("adtServiceUrl", EnvironmentVariableTarget.Process);
             string _adtClientId =  Environment.GetEnvironmentVariable("adtClientId", EnvironmentVariableTarget.Process);
-            string _adtClientSecret = Environment.GetEnvironmentVariable("adtClientSecret", EnvironmentVariableTarget.Process);
-            string _adtTenantId = Environment.GetEnvironmentVariable("adtTenantId", EnvironmentVariableTarget.Process);
+            string _adtClientSecret =  Environment.GetEnvironmentVariable("adtClientSecret", EnvironmentVariableTarget.Process);
+            string _adtTenantId =  Environment.GetEnvironmentVariable("adtTenantId", EnvironmentVariableTarget.Process);
 
 
 
