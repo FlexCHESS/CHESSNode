@@ -56,6 +56,8 @@ In addition to the standard AAS Part 2 REST API, `CHESSNetworkController.cs` add
 | GET / POST | `/current` | Proxy to the EMS adapter's `/current` operation, aggregated per priority level |
 | POST | `/run` | Invoke the optimiser synchronously with specified limits and objectives (per-priority-level KPI aggregation; see the `todo` noting the day-ahead scheduler below fills in the missing dispatch logic) |
 | POST | `/run/dayahead` | Day-ahead cost-minimising scheduler - see below |
+| POST | `/run/dayahead/flexibility` | Day-ahead scheduler sourced from an Energy Flexibility Data Model (EFDM) instance instead of live EMS adapter capacity - see below |
+| POST | `/run/dayahead/flexibility/measures` | Express a computed day-ahead schedule as an EFDM `flexibleLoadMeasuresPackage` instance - see below |
 
 `PicloMarketController.cs` adds a [Piclo Flex marketplace](https://docs.picloflex.com) integration - see below:
 
