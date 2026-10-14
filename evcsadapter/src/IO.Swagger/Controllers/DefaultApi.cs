@@ -53,7 +53,7 @@ namespace IO.Swagger.Controllers
             public String currentStatus { get; set; }
             public ChessStatus[] status { get; set; }
             public ChessStatus[] limits { get; set; }
-
+            public Double[] dayahead { get; set; }
 
         }
 
@@ -386,6 +386,7 @@ namespace IO.Swagger.Controllers
             Int32 currentState = 0;
             CHESS? asset = assets.Find(x => x.id.EndsWith(chessid));
 
+
             List<ChargingStationUpdate> body = new List<ChargingStationUpdate>();
             List<EVSEUpdate> newEVSEUpdates = new List<EVSEUpdate>();
             EVSEUpdate newEVSEUpdate = new  EVSEUpdate();
@@ -412,29 +413,55 @@ namespace IO.Swagger.Controllers
 
             while (true)
             {
+                Double[] dayahead = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+                newMeasurement.timestamp = DateTime.Now;
+                DayOfWeek today = DateTime.Today.DayOfWeek;
+                int  psOffset = (int)today;
+                Console.WriteLine("Today is " + psOffset);
+
+                for (int hour = 0; hour<24; hour++)
+                {
+                    for (int offset=hour*12; offset<hour*12+12; offset++)
+                        dayahead[hour] += ps[offset,psOffset] * 22000 / 12;
+                    Console.WriteLine("Dayahead " + hour + " = " + dayahead[hour]);
+                }
+
+
+                if(asset != null) {
+                    asset.dayahead = dayahead;
+                    try
+                    {
+
+                        Console.WriteLine("Adding forecast " + psOffset);
+                        IoT.Services.ChessDayahead forecastDT = new IoT.Services.ChessDayahead();
+                        
+                        forecastDT.dayahead = dayahead;
+                        Program.dtClient.CreateOrReplaceDigitalTwin("it-tle-"+chessid+"dayahead", forecastDT);
+                    }
+                    catch (Exception ex) { Console.WriteLine("Error adding forecast " + ex.ToString()); }
+
+
+                }
+
                 foreach (ChargingStationUpdate update in body)
                 {
                     String id = update.Id;
-                    String status = update.Status.ToString();
-                    int psOffset = 0; 
-                    newMeasurement.timestamp = DateTime.Now;
-                    DayOfWeek today = DateTime.Today.DayOfWeek;
-
-                    psOffset = (int)today;
+                    String status = update.Status.ToString();             
+    
 
                     // random state transition model for charging
-                    if (currentState < 2 && rand.NextDouble() < ps[ (int)(DateTime.Now.TimeOfDay.TotalMinutes/5),psOffset])
+                    if (currentState < 2 && rand.NextDouble() < ps[(int)(DateTime.Now.TimeOfDay.TotalMinutes/5),psOffset])
                     {
 
                             currentState++;                      
 
-                    } else if (currentState > 0 && rand.NextDouble() < (1-ps[ (int)(DateTime.Now.TimeOfDay.TotalMinutes/5),psOffset])) 
+                    } else if (currentState > 0 && rand.NextDouble() < (1-ps[(int)(DateTime.Now.TimeOfDay.TotalMinutes/5),psOffset])) 
                     {
                         
                             currentState--;            
                     }
 
-                    while (currentLimit < currentStates[currentState] && currentState > 0) currentState --; 
+                    //while (currentLimit < currentStates[currentState] && currentState > 0) currentState --; 
 
                     Console.WriteLine("Current state = " + currentState);
                     // curtail based on state                   
