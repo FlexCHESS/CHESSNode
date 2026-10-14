@@ -13,6 +13,8 @@ The battery does not need to be a traditional electrochemical battery but could 
 
 Power limiting or curtailment (power envelope based) can be applied to EV charging and other flexible loads by applying limits on the power consumed of produced over network congestion periods.
 
+Combining the CHESS assets in an optimal manner to either minimise cost or carbon is performed using the CHESS status and forecasts on both a dayahead schedule and using intraday adjustments in order to comply with the power limits. 
+
 ![Alt text](dayahead.png)
 
 Digital Twins
