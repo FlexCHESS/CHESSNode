@@ -53,6 +53,7 @@ export interface ChessStatusProfile {
   id: string;
   currentStatus?: string;
   status: ChessStatusWindow[];
+  dayahead?: number[];
 }
 
 export type Objective = "cost" | "carbon";

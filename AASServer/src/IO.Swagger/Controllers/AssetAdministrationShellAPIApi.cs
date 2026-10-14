@@ -1119,18 +1119,29 @@ namespace IO.Swagger.Controllers
                                     Console.WriteLine("Updating twin " + smeTwin.Id + " - " + Newtonsoft.Json.JsonConvert.SerializeObject(body));
 
                                     JsonPatchDocument update = new JsonPatchDocument();
-                                    update.AppendReplace("/value", body.Value.ToString());
-
-                                    try
+                                    if (idShortPath.EndsWith("dayahead"))
                                     {
-                                        response = Program.dtClient.UpdateDigitalTwin(smeTwin.Id.Substring(4), update);
+                                        IoT.Services.ChessDayahead forecastDT = new IoT.Services.ChessDayahead();
+                        
+                                        forecastDT.dayahead = Array.ConvertAll(body.Value.ToString().Trim('[').Trim(']').Split(','), Double.Parse);
+                                        Program.dtClient.CreateOrReplaceDigitalTwin(smeTwin.Id.Substring(4), forecastDT);
+
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
+                                        update.AppendReplace("/value", body.Value.ToString());
 
-                                        update = new JsonPatchDocument();
-                                        update.AppendAdd("/value", body.Value.ToString());
-                                        response = Program.dtClient.UpdateDigitalTwin(smeTwin.Id.Substring(4), update);
+                                        try
+                                        {
+                                            response = Program.dtClient.UpdateDigitalTwin(smeTwin.Id.Substring(4), update);
+                                        }
+                                        catch (Exception ex)
+                                        {
+
+                                            update = new JsonPatchDocument(); 
+                                            update.AppendAdd("/value", body.Value.ToString());
+                                            response = Program.dtClient.UpdateDigitalTwin(smeTwin.Id.Substring(4), update);
+                                        }
                                     }
                                 }
 

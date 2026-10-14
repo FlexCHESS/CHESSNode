@@ -131,7 +131,7 @@ function App() {
                 a per-priority-level cost/carbon breakdown.
               </p>
             </div>
-            <DayAheadPanel capabilities={capabilities} onDispatched={reload} />
+            <DayAheadPanel capabilities={capabilities} statusProfiles={statusProfiles} onDispatched={reload} />
           </>
         )}
       </main>

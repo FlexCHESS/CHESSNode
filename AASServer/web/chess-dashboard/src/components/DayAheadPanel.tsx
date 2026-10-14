@@ -19,12 +19,13 @@ import { runDayAhead, runOptimiser } from "../api/client";
 import { aggregateOptimiserResults } from "../lib/kpi";
 import { mergeSchedulesByAsset } from "../lib/schedule";
 import { formatMoney, formatW } from "../lib/time";
-import { DAY_AHEAD_PRESETS, DEFAULT_MAX_POWER_W } from "../lib/dayAheadPresets";
+import { DAY_AHEAD_PRESETS, DEFAULT_MAX_POWER_W, sumDayAheadDemand } from "../lib/dayAheadPresets";
 import { FlexibilityTimeline } from "./FlexibilityTimeline";
 import { KpiBreakdownChart } from "./KpiBreakdownChart";
 
 interface Props {
   capabilities: ChessCapability[];
+  statusProfiles: ChessStatusProfile[];
   onDispatched: () => void;
 }
 
@@ -32,7 +33,7 @@ function currencySymbol(value: number, unit: string): string {
   return formatMoney(value, unit).replace(/[\d.,-]/g, "");
 }
 
-export function DayAheadPanel({ capabilities, onDispatched }: Props) {
+export function DayAheadPanel({ capabilities, statusProfiles, onDispatched }: Props) {
   const { settings } = useSettings();
   const [presetKey, setPresetKey] = useState<keyof typeof DAY_AHEAD_PRESETS>("weekday");
   const [maxPower, setMaxPower] = useState(DEFAULT_MAX_POWER_W);
@@ -45,14 +46,23 @@ export function DayAheadPanel({ capabilities, onDispatched }: Props) {
 
   const preset = DAY_AHEAD_PRESETS[presetKey];
 
+  // Prefer the network's own forecast: each asset's status profile can carry
+  // a `dayahead` array (its anticipated per-period draw), and summing those
+  // across every CHESSStatusProfile gives the fleet's actual expected demand
+  // for the day. Fall back to the illustrative preset curve only when none
+  // of the fetched profiles supply a forecast yet.
+  const fleetDemand = useMemo(() => sumDayAheadDemand(statusProfiles), [statusProfiles]);
+  const usingFleetDemand = fleetDemand !== null;
+  const demand = fleetDemand ?? preset.demand;
+
   const forecastRows = useMemo(
     () =>
-      preset.demand.map((d, h) => ({
+      demand.map((d, h) => ({
         hour: `${String(h).padStart(2, "0")}:00`,
         Demand: d,
         Tariff: preset.tariff[h],
       })),
-    [preset]
+    [demand, preset]
   );
 
   const lookup = (id: string) => {
@@ -85,8 +95,79 @@ export function DayAheadPanel({ capabilities, onDispatched }: Props) {
     try {
       const response = await runDayAhead(settings, {
         Limits: [{ Name: "maxpower", Unit: "W", Value: maxPower }],
-        Options: [{ objective, option: "dayahead", status: [] }],
-        Demand: preset.demand,
+        Options: [{ objective, option: "dayahead", status: [{
+          "status":"ForceCharge",
+          "service":"all",
+          "starttime":"02:00",
+          "endtime":"06:00",
+          "capacity":"1",
+          "recurrence":"daily",
+          "efficiency": 0,
+          "priority": 0,
+          "probability": 1,
+          "capacityStart": 0,
+          "capacityEnd": 1,
+          "capacityMax": 1,
+          "cycleCost": 0,
+          "cycleCarbon": 0,
+          "cycleCostUnit": "£/kWh",
+          "cycleCarbonUnit": "g/kWh"          
+        },
+        {
+          "status":"ForceDischarge",
+          "service":"all",
+          "starttime":"07:15",
+          "endtime":"11:15",
+          "capacity":"1",
+          "recurrence":"daily",
+          "efficiency": 0,
+          "priority": 0,
+          "probability": 1,
+          "capacityStart": 0,
+          "capacityEnd": 1,
+          "capacityMax": 1,
+          "cycleCost": 0,
+          "cycleCarbon": 0,
+          "cycleCostUnit": "£/kWh",
+          "cycleCarbonUnit": "g/kWh"
+        },
+        {
+          "status":"ForceCharge",
+          "service":"all",
+          "starttime":"11:15",
+          "endtime":"13:15",
+          "capacity":"1",
+          "recurrence":"daily",
+          "efficiency": 0,
+          "priority": 0,
+          "probability": 1,
+          "capacityStart": 0,
+          "capacityEnd": 1,
+          "capacityMax": 1,
+          "cycleCost": 0,
+          "cycleCarbon": 0,
+          "cycleCostUnit": "£/kWh",
+          "cycleCarbonUnit": "g/kWh"
+        },
+        {
+          "status":"ForceDischarge",
+          "service":"all",
+          "starttime":"13:15",
+          "endtime":"17:15",
+          "capacity":"1",
+          "recurrence":"daily",
+          "efficiency": 0,
+          "priority": 0,
+          "probability": 1,
+          "capacityStart": 0,
+          "capacityEnd": 1,
+          "capacityMax": 1,
+          "cycleCost": 0,
+          "cycleCarbon": 0,
+          "cycleCostUnit": "£/kWh",
+          "cycleCarbonUnit": "g/kWh"
+        }] }],
+        Demand: demand,
         Tariff: preset.tariff,
         PeriodHours: 1,
         Recurrence: "daily",
@@ -155,6 +236,11 @@ export function DayAheadPanel({ capabilities, onDispatched }: Props) {
                 </label>
               ))}
             </div>
+            <span className="hint">
+              {usingFleetDemand
+                ? "Demand forecast: summed from the dayahead profile of every registered CHESS asset (tariff still from preset)."
+                : "Demand forecast: preset curve - no asset currently reports a dayahead profile."}
+            </span>
           </div>
           <div className="field">
             <label htmlFor="max-power">Max site import (maxpower limit)</label>
@@ -162,8 +248,8 @@ export function DayAheadPanel({ capabilities, onDispatched }: Props) {
               id="max-power"
               type="range"
               min={1000}
-              max={8000}
-              step={100}
+              max={500000}
+              step={1000}
               value={maxPower}
               onChange={(e) => setMaxPower(Number(e.target.value))}
             />

@@ -1,4 +1,5 @@
 import type { ChessCapability, ChessStatusProfile, ChessStatusWindow } from "../types";
+import { demandCurve } from "../lib/dayAheadPresets";
 
 // A small demonstration CHESS network - enough variety (battery, EV charger,
 // heat pump) to exercise every visualisation without needing a live AAS server.
@@ -59,6 +60,9 @@ export const mockStatusProfiles: ChessStatusProfile[] = [
     location: "Site A - Substation 3",
     id: "chess-battery-01",
     currentStatus: "available",
+    // Battery's own standby/control-electronics draw - flat, negligible next to its
+    // charge/discharge windows above.
+    dayahead: demandCurve(60, 0, 0),
     status: [
       win({ id: "chess-battery-01-status-1", status: "ForceCharge", starttime: "01:00", endtime: "05:00", capacity: "4000", priority: 3, cycleCost: 0.032, cycleCarbon: 0.02, service: "all" }),
       win({ id: "chess-battery-01-status-2", status: "ForceDischarge", starttime: "07:00", endtime: "09:30", capacity: "3200", priority: 1, cycleCost: 0.06, cycleCarbon: 0.09, service: "dsr" }),
@@ -71,6 +75,9 @@ export const mockStatusProfiles: ChessStatusProfile[] = [
     location: "Site A - Car Park",
     id: "chess-evcharger-04",
     currentStatus: "available",
+    // Expected charging demand - light through the day, a strong peak as commuters
+    // plug in after work.
+    dayahead: demandCurve(150, 100, 2600),
     status: [
       win({ id: "chess-evcharger-04-status-1", status: "ForceCharge", starttime: "00:00", endtime: "06:00", capacity: "7000", priority: 2, cycleCost: 0.028, cycleCarbon: 0.018, recurrence: "weekdays", service: "all" }),
       win({ id: "chess-evcharger-04-status-2", status: "Curtail", starttime: "09:00", endtime: "17:00", capacity: "3500", priority: 4, cycleCost: 0.05, cycleCarbon: 0.05, service: "fcr" }),
@@ -82,6 +89,8 @@ export const mockStatusProfiles: ChessStatusProfile[] = [
     location: "Site B - Plant Room",
     id: "chess-heatpump-02",
     currentStatus: "available",
+    // Forecast heating/hot-water demand - morning and evening peaks.
+    dayahead: demandCurve(300, 900, 700),
     status: [
       win({ id: "chess-heatpump-02-status-1", status: "ForceDischarge", starttime: "06:00", endtime: "08:00", capacity: "1800", priority: 1, cycleCost: 0.045, cycleCarbon: 0.03, recurrence: "daily", service: "dsr" }),
       win({ id: "chess-heatpump-02-status-2", status: "ForceCharge", starttime: "12:00", endtime: "15:00", capacity: "2200", priority: 5, cycleCost: 0.033, cycleCarbon: 0.021, service: "all" }),

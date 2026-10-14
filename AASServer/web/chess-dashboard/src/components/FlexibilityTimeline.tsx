@@ -55,7 +55,7 @@ function AssetRow({
   return (
     <div className="timeline-row">
       <div className="timeline-row-label">
-        {profile.identifier}
+        {profile.id}
         <span className="timeline-row-sub">{profile.location}</span>
       </div>
       <div className="timeline-track">

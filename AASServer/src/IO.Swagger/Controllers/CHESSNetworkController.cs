@@ -52,6 +52,7 @@ namespace IO.Swagger.Controllers
         public String id { get; set; }
         public String currentStatus { get; set; }
         public IoT.Services.ChessStatus[] status { get; set; }
+        public Double[] dayahead { get; set; }
     }
 
 
@@ -715,6 +716,33 @@ namespace IO.Swagger.Controllers
                                 }
                             }
                             catch (Exception ex) { Console.WriteLine("Error - " + ex.ToString());  return StatusCode(500); }
+                            query = "SELECT DT.$dtId FROM  DigitalTwins twin JOIN DT RELATED twin.contains WHERE twin.$dtId = '" + twin.Id + "' and  DT.$metadata.$model = 'dtmi:com:flexchess:chess:dayahead:forecast;1'";
+                            try
+                            {
+
+                                Pageable<BasicDigitalTwin> statusResponse = Program.dtClient.Query<BasicDigitalTwin>(query);
+
+               
+                                if (statusResponse != null)
+                                {
+                                    
+                                    
+                                    foreach (BasicDigitalTwin tsId in statusResponse)
+                                    {
+                                     
+                                       
+                                        IoT.Services.ChessDayahead forecast = Program.dtClient.GetDigitalTwin<IoT.Services.ChessDayahead>(tsId.Id);
+                                        if (forecast != null)
+                                        {
+                                            chessStatus.dayahead = forecast.dayahead;
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex) {  }
+
                             res.Add(chessStatus);
 
                         }
@@ -813,9 +841,34 @@ namespace IO.Swagger.Controllers
                                             count++;
                                         }
                                     }
+                                }   
+                            } catch (Exception ex) { return StatusCode(500); }
+                            query = "SELECT DT.$dtId FROM  DigitalTwins twin JOIN DT RELATED twin.contains WHERE twin.$dtId = '" + twin.Id + "' and  DT.$metadata.$model = 'dtmi:com:flexchess:chess:dayahead:forecast;1'";
+                            try
+                            {
+
+                                Pageable<BasicDigitalTwin> statusResponse = Program.dtClient.Query<BasicDigitalTwin>(query);
+
+               
+                                if (statusResponse != null)
+                                {
+                                    
+                                    
+                                    foreach (BasicDigitalTwin tsId in statusResponse)
+                                    {
+                                     
+                                       
+                                        IoT.Services.ChessDayahead forecast = Program.dtClient.GetDigitalTwin<IoT.Services.ChessDayahead>(tsId.Id);
+                                        if (forecast != null)
+                                        {
+                                            chessStatus.dayahead = forecast.dayahead;
+
+                                            break;
+                                        }
+                                    }
                                 }
                             }
-                            catch (Exception ex) { return StatusCode(500); }
+                            catch (Exception ex) {  }
 
                             res.Add(chessStatus);
 
