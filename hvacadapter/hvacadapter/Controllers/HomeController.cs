@@ -45,6 +45,8 @@ namespace hvacadapter.Controllers
         public Status[] status { get; set; }
         public DeviceData deviceData { get; set; }
 
+        public Double[] dayahead  { get; set; }
+
     }
 
 
@@ -423,6 +425,152 @@ namespace hvacadapter.Controllers
             return responseString;
         }
 
+        /// <summary>
+        /// Get the dayahead prediction of power
+        /// </summary>
+        /// 
+        
+
+        protected Double[] dayahead(Weather weather, int asset)
+        {
+
+            Double[] temperature = {293, 293, 293};
+            Double[] lastTemperature = {293, 293, 293};    
+            Double[] simTemperature = {293, 293, 293};
+            Double[] simLastTemperature = {293, 293, 293};    
+            Double[] simhvacPower = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+            Double[] hvacPower = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+            Double[] pvPower = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+            Double[] totalPower = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+            Double ta = 0;       
+            CHESS chess = assets[asset];
+
+            for (int hours = 0; hours < 24; hours++)
+            {
+
+                    // Use the current temperature 
+                    if (weather != null) {
+                        ta = weather.hourly.temperature_2m[hours] + 273;
+                        pvPower[hours] = (weather.hourly.global_tilted_irradiance[hours] * 150);
+                    }
+                    else 
+                        Console.WriteLine("Cannot get current temp");
+
+              
+        
+
+                    for (int i=0; i<3; i++)
+                    {
+                        if (hours<8 || hours>19) 
+                             temperature[i] = ta*0.01 + lastTemperature[i]*0.99;
+                        else temperature[i] = 298*0.01 + lastTemperature[i]*0.99;
+                        hvacPower[hours] += ((lastTemperature[i] - (1 - 0.001 * alpha) * temperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower[hours] )) / (khvac * beta) - 285);
+                        if (hvacPower[hours] < 0) hvacPower[hours] = 0;
+                        else
+                            hvacPower[hours] = Math.Abs(hvacPower[hours]);
+                       
+                        if (hours<8 || hours>19) 
+                            simTemperature[i] = ta*0.01 + simLastTemperature[i]*0.99;
+                        else simTemperature[i] = 298*0.01 + simLastTemperature[i]*0.99;
+                        simhvacPower[hours] += ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower[hours] )) / (khvac * beta) - 285);
+ 
+                    }
+               
+                    totalPower[hours] = hvacPower[hours] - pvPower[hours];
+
+
+                    List<Double> nextTemperature = new List<Double>();
+                    List<Double> endTemperature = new List<Double>();
+                    if (chess.status != null)
+                    foreach (Status status in chess.status) 
+                    {
+                        // see if there are any weekday / weekend changes !
+
+                        Scheduler scheduler = new Scheduler();
+                        
+                        if (!status.status.Contains("available")) 
+                        {
+                            Schedule schedule = new Schedule();
+                            schedule.workMode = status.status;
+                            schedule.startHour = Int32.Parse(status.starttime.Substring(0, 2));
+                            schedule.startMinute = Int32.Parse(status.starttime.Substring(3, 2));
+                            schedule.endHour = Int32.Parse(status.endtime.Substring(0, 2));
+                            schedule.endMinute = Int32.Parse(status.endtime.Substring(3, 2));
+                            
+                            Double capacity = Double.Parse(status.capacity);
+                            schedule.enable = 1;
+                          
+                            status.active = 1;
+
+
+                            TimeSpan start = new TimeSpan(schedule.startHour, schedule.startMinute, 0); 
+                            TimeSpan end = new TimeSpan(schedule.endHour, schedule.endMinute, 0);
+
+                  
+                            Console.WriteLine("Status " + status.status + " " + status.starttime + " " + status.endtime + " " + schedule.startHour + ":" + schedule.startMinute + " " + schedule.endHour + ":" + schedule.endMinute);
+                
+                            if (start.Hours <= hours && end.Hours > hours)
+                            {
+                                
+                                Double period = end.Subtract(start).TotalMinutes;
+                                Double flexPower = 60 * capacity   / (10000 * period); 
+
+                                // Use the forecast temp at end of the period to compare to see if this will impact indoor temperature more
+                                Console.WriteLine("Time at end is " + schedule.endHour);
+                                Double tempAtEnd = weather.hourly.temperature_2m[ schedule.endHour ] + 273;
+
+ 
+
+                                Console.WriteLine("Capacity is " + capacity);
+ 
+                                if (status.status.Contains("Discharge") || status.status.Contains("Feedin") || status.status.Contains("SelfUse"))
+                                {
+                                    Console.WriteLine("Discharging");
+                                  
+
+
+         
+
+
+                                    for (int i=0; i<3; i++)      
+                                    { 
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower[hours] ) + (simhvacPower[i] + flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+
+                            
+                                        simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower[hours] )) / (khvac * beta) - 285);
+                   
+                                     
+                                    }
+
+                                } else if ( status.status.Contains("ForceCharge") )
+                                {
+
+                                    Console.WriteLine("Charging");
+                                    for (int i=0; i<3; i++)      
+                                    { 
+                                    
+                                        simTemperature[i] = (0.001 * (alpha * ta + ksun * beta * pvPower[hours] ) + (simhvacPower[i] - flexPower + 285) * (khvac * beta) + simLastTemperature[i])/(1-0.001*alpha);
+
+                                        simhvacPower[i] = ((simLastTemperature[i] - (1 - 0.001 * alpha) * simTemperature[i] + 0.001 * (alpha * ta + ksun * beta * pvPower[hours] )) / (khvac * beta) - 285);
+
+                                     
+                                    }
+
+                                }
+
+
+   
+                            }
+                            
+
+                        } else 
+                            status.active = 0;
+
+        
+                    }
+            }
+            return totalPower;
+        }
 
 
         /// <summary>
@@ -495,6 +643,7 @@ namespace hvacadapter.Controllers
                     Console.WriteLine ("Got " + result);
                     Weather weather = JsonConvert.DeserializeObject<Weather>(result);
 
+                    chess.dayahead = dayahead(weather, asset);
               
                     // Use the current temperature 
                     if (weather != null) {
@@ -591,7 +740,6 @@ namespace hvacadapter.Controllers
                                      
                                     }
 
-         ;
                                 } else if ( status.status.Contains("ForceCharge") )
                                 {
 
@@ -739,6 +887,17 @@ namespace hvacadapter.Controllers
                     url = Program.urlprefix + "/aas/submodels/" + chess.id.Replace("-sim","") + "telemetry/submodel-elements/sme-" + chess.id.Replace("-sim","") + "MRB_GN_FV_Wsys/invoke/$value";
 
                     update = "{\"value\":" + (-pvPower/1000) + "}";
+
+                    Console.WriteLine("Updating DT - " + url + " - " +update);
+
+                    result = Post(url, update, authToken);
+
+                    Console.WriteLine(result);
+
+                    // Update the forecast for dayahead
+                    url = Program.urlprefix + "/aas/submodels/" + chess.id + "Forecast/submodel-elements/sme-" + chess.id + "dayahead/invoke/$value";
+
+                    update = "{\"value\":\"[" + string.Join(", ", chess.dayahead) + "]\"}";
 
                     Console.WriteLine("Updating DT - " + url + " - " +update);
 
