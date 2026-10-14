@@ -13,6 +13,8 @@ The battery does not need to be a traditional electrochemical battery but could 
 
 Power limiting or curtailment (power envelope based) can be applied to EV charging and other flexible loads by applying limits on the power consumed of produced over network congestion periods.
 
+![Alt text](dayahead.png)
+
 Digital Twins
 -------------
 
