@@ -22,6 +22,8 @@ The Docker image builds it and serves it from the AAS Server itself at
 development, `npm run dev` inside `web/chess-dashboard` still runs it as its
 own Vite dev server against demo data or a live server URL you configure.
 
+![Alt text](../doc/dayahead.png)
+
 ## Build and run
 
 Native (from within this directory):
