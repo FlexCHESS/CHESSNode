@@ -24,7 +24,7 @@ The DTDL consists of the digital twin model which defines the data semantic stru
 2) Import DTDL into Azure environment
 -------------------------------------
 
-The DT explorer (https://preprodapim.umbrellaiot.com:9096) can be used to import the CHESS into the DT environemnt in Azure if the CHESS adapters do not support on the fly creation of digital twin instances.
+The DT explorer can be used to import the CHESS into the DT environemnt in Azure if the CHESS adapters do not support on the fly creation of digital twin instances.
 
 ![Alt text](images/upload.png)
 
@@ -156,6 +156,8 @@ algorithm. Call the CHESS API `/run/dayahead` operation with the limit and forec
   }]
 }
 ```
+
+![Alt text](../doc/dayahead.png)
 
 This is complementary to, not a replacement for, the real-time limit enforcement that the EMS
 adapter's `polling()` loop performs when a `limit` is passed to its own `/status/{id}` operation
