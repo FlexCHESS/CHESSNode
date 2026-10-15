@@ -80,6 +80,8 @@ In demo mode this reads/writes the same in-memory CHESS network as the
 Preferences tab, so a dispatched day-ahead schedule immediately shows up in the
 Flexibility schedule and Network tabs.
 
+![Alt text](../../../doc/dayahead.png)
+
 ## Not yet wired up
 
 The Piclo Flex marketplace routes (`PicloMarketController.cs`) aren't surfaced
