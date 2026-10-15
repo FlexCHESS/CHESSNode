@@ -13532,6 +13532,11 @@ components:
         currentStatus:
           type: string
           nullable: true
+        dayahead:
+          type: array
+          items:
+            $ref: number
+          nullable: true   
         status:
           type: array
           items:
